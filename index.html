@@ -986,7 +986,7 @@ function render1(ph) {
   ctx.fillStyle='#e8f04066'; ctx.font='bold 9px Barlow Condensed'; ctx.textAlign='center';
   ctx.fillText(isRStance?'R HIKE':'L HIKE', cx, h * 0.735); ctx.textAlign='left';
 
-  drawGraph(ctx, 22, h * 0.85, w - 28, h * 0.2, 'Hike', history.hike, '#ff6e50', '#38d9a9', -S.hike, S.hike);
+  drawGraph(ctx, 22, h * 0.4, w - 28, h * 0.2, 'Hike', history.hike, '#ff6e50', '#38d9a9', -S.hike, S.hike);
 
   document.getElementById('r1').innerHTML =
     `<b>R HIKE</b> ${rightHikeOutput.toFixed(1)}°<br>` +
@@ -1046,7 +1046,7 @@ function render2(ph) {
   const rTilt = (rightTiltRad*180/Math.PI).toFixed(1);
   const lTilt = (leftTiltRad*180/Math.PI).toFixed(1);
 
-  drawGraph(ctx, 22, h * 0.85, w - 28, h * 0.2, 'Tilt', history.tilt, '#ff6e50', '#38d9a9', -S.tilt, S.tilt);
+  drawGraph(ctx, 22, h * 0.4, w - 28, h * 0.2, 'Tilt', history.tilt, '#ff6e50', '#38d9a9', -S.tilt, S.tilt);
 
   document.getElementById('r2').innerHTML =
     `<b>R TILT</b> ${rTilt}° (${rightTiltRad>0?'Anterior':'Posterior'})<br>` +
@@ -1103,7 +1103,7 @@ function render3(ph) {
   const rSwingDeg = getWheelRotation(ph, S.swing, true);
   const lSwingDeg = getWheelRotation(ph, S.swing, false);
 
-  drawGraph(ctx, 22, h * 0.85, w - 28, h * 0.2, 'Swing', history.swing, '#ff6e50', '#38d9a9', -S.swing, S.swing);
+  drawGraph(ctx, 22, h * 0.4, w - 28, h * 0.2, 'Swing', history.swing, '#ff6e50', '#38d9a9', -S.swing, S.swing);
 
   document.getElementById('r3').innerHTML =
     `<b>R SWING</b> ${rSwingDeg>=0?'+':''}${rSwingDeg.toFixed(1)}°<br>` +
