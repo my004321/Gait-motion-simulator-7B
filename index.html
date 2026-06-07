@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Pelvic Gait Simulator</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;600;700&display=swap');
@@ -223,7 +223,7 @@ input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.3); }
   header {
     height: auto;
     min-height: 46px;
-    padding: 8px 12px;
+    padding: max(8px, env(safe-area-inset-top)) 12px 8px;
     gap: 8px 12px;
     flex-wrap: wrap;
   }
@@ -250,7 +250,7 @@ input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.3); }
   }
 
   .view {
-    height: min(68vh, 430px);
+    height: clamp(430px, 62svh, 520px);
     min-height: 340px;
   }
 
@@ -276,12 +276,13 @@ input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.3); }
 
 @media (max-width: 430px) {
   .view {
-    height: 78vh;
-    min-height: 360px;
+    height: clamp(500px, 64svh, 560px);
+    min-height: 0;
   }
 
   .panel {
     grid-template-columns: 1fr;
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .psec { border-right: 0; }
@@ -983,9 +984,9 @@ function render1(ph) {
   const avgHike = (rightHikeOutput + leftHikeOutput) / 2;
   const isRStance = rightHikeOutput > leftHikeOutput;
   ctx.fillStyle='#e8f04066'; ctx.font='bold 9px Barlow Condensed'; ctx.textAlign='center';
-  ctx.fillText(isRStance?'R HIKE':'L HIKE', cx, h-16); ctx.textAlign='left';
+  ctx.fillText(isRStance?'R HIKE':'L HIKE', cx, h * 0.735); ctx.textAlign='left';
 
-  drawGraph(ctx, 12, h * 0.75, w - 24, h * 0.22, 'Hike', history.hike, '#ff6e50', '#38d9a9', -S.hike, S.hike);
+  drawGraph(ctx, 22, h * 0.85, w - 28, h * 0.2, 'Hike', history.hike, '#ff6e50', '#38d9a9', -S.hike, S.hike);
 
   document.getElementById('r1').innerHTML =
     `<b>R HIKE</b> ${rightHikeOutput.toFixed(1)}°<br>` +
@@ -1045,7 +1046,7 @@ function render2(ph) {
   const rTilt = (rightTiltRad*180/Math.PI).toFixed(1);
   const lTilt = (leftTiltRad*180/Math.PI).toFixed(1);
 
-  drawGraph(ctx, 12, h * 0.75, w - 24, h * 0.22, 'Tilt', history.tilt, '#ff6e50', '#38d9a9', -S.tilt, S.tilt);
+  drawGraph(ctx, 22, h * 0.85, w - 28, h * 0.2, 'Tilt', history.tilt, '#ff6e50', '#38d9a9', -S.tilt, S.tilt);
 
   document.getElementById('r2').innerHTML =
     `<b>R TILT</b> ${rTilt}° (${rightTiltRad>0?'Anterior':'Posterior'})<br>` +
@@ -1102,7 +1103,7 @@ function render3(ph) {
   const rSwingDeg = getWheelRotation(ph, S.swing, true);
   const lSwingDeg = getWheelRotation(ph, S.swing, false);
 
-  drawGraph(ctx, 12, h * 0.75, w - 24, h * 0.22, 'Swing', history.swing, '#ff6e50', '#38d9a9', -S.swing, S.swing);
+  drawGraph(ctx, 22, h * 0.85, w - 28, h * 0.2, 'Swing', history.swing, '#ff6e50', '#38d9a9', -S.swing, S.swing);
 
   document.getElementById('r3').innerHTML =
     `<b>R SWING</b> ${rSwingDeg>=0?'+':''}${rSwingDeg.toFixed(1)}°<br>` +
