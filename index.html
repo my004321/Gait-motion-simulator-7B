@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Pelvic Gait Simulator</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;600;700&display=swap');
@@ -92,7 +92,7 @@ header h1 {
   overflow: hidden;
   min-height: 0;
 }
-canvas { display: block; width: 100%; height: auto; max-height: 300px; }
+canvas { display: block; width: 100%; height: 100%; }
 
 .view-tag {
   position: absolute;
@@ -153,6 +153,7 @@ canvas { display: block; width: 100%; height: auto; max-height: 300px; }
   margin-bottom: 12px;
   opacity: 0.8;
 }
+
 /* Mode buttons */
 .mode-grid {
   display: grid;
@@ -237,31 +238,56 @@ input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.3); }
   .hdr-pill { font-size: 0.48rem; }
   .live { margin-left: 0; }
 
-  /* Stack views vertically for small screens */
+  .body {
+    display: block;
+    min-height: auto;
+  }
+
   .views {
-    grid-template-columns: 1fr; /* single column layout */
-    gap: 10px; /* add space between views */
-  }
-
-  /* Make canvases adapt to container width */
-  canvas {
-    height: auto;
-    max-height: 300px; /* limit height on small screens */
-  }
-
-  /* Control panel stacking vertically */
-  .panel {
-    width: 100%;
-    border-left: none;
-    border-top: 1px solid var(--border);
     display: grid;
     grid-template-columns: 1fr;
+    gap: 1px;
+  }
+
+  .view {
+    height: clamp(430px, 62svh, 520px);
+    min-height: 340px;
+  }
+
+  .panel {
+    width: 100%;
+    border-left: 0;
+    border-top: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    overflow: visible;
   }
 
   .psec {
-    padding: 10px 12px;
+    min-width: 0;
+    padding: 12px;
+    border-right: 1px solid var(--border);
   }
+
+  .psec:first-child { grid-column: 1 / -1; }
+  .psec-title { font-size: 0.62rem; }
+  .readout { font-size: 0.48rem; }
 }
+
+@media (max-width: 430px) {
+  .view {
+    height: clamp(500px, 64svh, 560px);
+    min-height: 0;
+  }
+
+  .panel {
+    grid-template-columns: 1fr;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .psec { border-right: 0; }
+}
+
 </style>
 </head>
 <body>
@@ -311,7 +337,7 @@ input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.3); }
       <div class="psec-title">Cadence</div>
       <div class="srow">
         <div class="shdr"><span class="sname">RPM (steps/min)</span><span class="sval" id="vRpm">90</span></div>
-        <input type="range" id="sRpm" min="20" max="200" value="90" step="1" />
+        <input type="range" id="sRpm" min="20" max="200" value="90" step="1">
       </div>
     </div>
 
@@ -319,7 +345,7 @@ input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.3); }
       <div class="psec-title">Pelvic Hike</div>
       <div class="srow">
         <div class="shdr"><span class="sname">Hike Amplitude (°)</span><span class="sval" id="vHike">7</span></div>
-        <input type="range" id="sHike" min="0" max="25" value="7" step="0.5" />
+        <input type="range" id="sHike" min="0" max="25" value="7" step="0.5">
       </div>
     </div>
 
@@ -327,7 +353,7 @@ input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.3); }
       <div class="psec-title">Pelvic Tilt</div>
       <div class="srow">
         <div class="shdr"><span class="sname">Tilt Amplitude (°)</span><span class="sval" id="vTilt">4</span></div>
-        <input type="range" id="sTilt" min="0" max="20" value="4" step="0.5" />
+        <input type="range" id="sTilt" min="0" max="20" value="4" step="0.5">
       </div>
     </div>
 
@@ -335,7 +361,7 @@ input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.3); }
       <div class="psec-title">Leg Swing</div>
       <div class="srow">
         <div class="shdr"><span class="sname">Swing Amplitude (°)</span><span class="sval" id="vSwing">35</span></div>
-        <input type="range" id="sSwing" min="0" max="65" value="35" step="0.5" />
+        <input type="range" id="sSwing" min="0" max="65" value="35" step="0.5">
       </div>
     </div>
   </div>
@@ -377,12 +403,12 @@ bindSlider('sTilt',  'vTilt',  'tilt',  v => v + '°');
 bindSlider('sSwing', 'vSwing', 'swing', v => v + '°');
 
 document.getElementById('bWalk').addEventListener('click', () => setMode('walk'));
-document.getElementById('bRun').addEventListener('click', () => setMode('run'));
+document.getElementById('bRun').addEventListener('click',  () => setMode('run'));
 
 function setMode(m) {
   mode = m;
   document.getElementById('bWalk').classList.toggle('on', m==='walk');
-  document.getElementById('bRun').classList.toggle('on', m==='run');
+  document.getElementById('bRun').classList.toggle('on',  m==='run');
   const isRun = m === 'run';
   const presets = isRun
     ? { rpm:160, hike:13, tilt:8, swing:46 }
@@ -406,7 +432,7 @@ function makeCanvas(id) {
     const r = el.parentElement.getBoundingClientRect();
     el.width  = r.width  * dpr;
     el.height = r.height * dpr;
-    el.style.width  = r.width + 'px';
+    el.style.width  = r.width  + 'px';
     el.style.height = r.height + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx._dpr = dpr;
@@ -960,14 +986,14 @@ function render1(ph) {
   ctx.fillStyle='#e8f04066'; ctx.font='bold 9px Barlow Condensed'; ctx.textAlign='center';
   ctx.fillText(isRStance?'R HIKE':'L HIKE', cx, h * 0.735); ctx.textAlign='left';
 
-  // Graph below the view
-  drawGraph(ctx, 22, h * 0.85, w - 28, h * 0.2, 'Hike', history.hike, '#ff6e50', '#38d9a9', -S.hike, S.hike);
+  drawGraph(ctx, 20, h * 0.78, w - 28, h * 0.2, 'Hike', history.hike, '#ff6e50', '#38d9a9', -S.hike, S.hike);
 
   document.getElementById('r1').innerHTML =
     `<b>R HIKE</b> ${rightHikeOutput.toFixed(1)}°<br>` +
     `<b>L HIKE</b> ${leftHikeOutput.toFixed(1)}°<br>` +
     `<b>PHASE</b> ${(ph*360).toFixed(0)}°`;
 }
+
 
 // ─── RENDER 2: PELVIC TILT (Transverse Top-Down) ─────────────────────────────
 function render2(ph) {
@@ -1020,14 +1046,14 @@ function render2(ph) {
   const rTilt = (rightTiltRad*180/Math.PI).toFixed(1);
   const lTilt = (leftTiltRad*180/Math.PI).toFixed(1);
 
-  // Graph below the view
-  drawGraph(ctx, 22, h * 0.85, w - 28, h * 0.2, 'Tilt', history.tilt, '#ff6e50', '#38d9a9', -S.tilt, S.tilt);
+  drawGraph(ctx, 20, h * 0.78, w - 28, h * 0.2, 'Tilt', history.tilt, '#ff6e50', '#38d9a9', -S.tilt, S.tilt);
 
   document.getElementById('r2').innerHTML =
     `<b>R TILT</b> ${rTilt}° (${rightTiltRad>0?'Anterior':'Posterior'})<br>` +
     `<b>L TILT</b> ${lTilt}° (${leftTiltRad>0?'Anterior':'Posterior'})<br>` +
     `<b>YAW</b> ${(transRad*180/Math.PI).toFixed(1)}°`;
 }
+
 
 // ─── RENDER 3: THIGH SWING (Sagittal Side View) ──────────────────────────────
 function render3(ph) {
@@ -1077,8 +1103,7 @@ function render3(ph) {
   const rSwingDeg = getWheelRotation(ph, S.swing, true);
   const lSwingDeg = getWheelRotation(ph, S.swing, false);
 
-  // Graph below the view
-  drawGraph(ctx, 22, h * 0.85, w - 28, h * 0.2, 'Swing', history.swing, '#ff6e50', '#38d9a9', -S.swing, S.swing);
+  drawGraph(ctx, 20, h * 0.78, w - 28, h * 0.2, 'Swing', history.swing, '#ff6e50', '#38d9a9', -S.swing, S.swing);
 
   document.getElementById('r3').innerHTML =
     `<b>R SWING</b> ${rSwingDeg>=0?'+':''}${rSwingDeg.toFixed(1)}°<br>` +
@@ -1137,6 +1162,5 @@ function loop(ts) {
 }
 requestAnimationFrame(loop);
 </script>
-</div>
 </body>
 </html>
