@@ -910,7 +910,7 @@ function render1(ph) {
   };
   drawSacrumFrontal(ctx, cx, cy, pelW);
 
-  const camDisplayY = h * 0.65;
+  const camDisplayY = h * 0.75;
   const camSpacing = Math.max(60, w * 0.15);
   const camRadius = Math.max(20, w * 0.08);
   drawCamMechanism(ctx, cx - camSpacing, camDisplayY, camRadius, ph, rightHikeOutput, 'RIGHT');
@@ -975,7 +975,7 @@ function render2(ph) {
   const pelW = Math.min(w,h)*0.35;
   const ac = drawPelvisTopDown(ctx, cx, cy, pelW, rightTiltRad, transRad);
 
-  const crankDisplayY = h * 0.7;
+  const crankDisplayY = h * 0.85;
   const crankSpacing = Math.max(60, w * 0.15);
   const crankRadius = Math.max(20, w * 0.08);
   drawCrankMechanism(ctx, cx - crankSpacing, crankDisplayY, crankRadius, ph, rightCrankOutput, 'RIGHT');
@@ -1052,7 +1052,7 @@ function render3(ph) {
     ctx.strokeStyle=col; ctx.lineWidth=2; ctx.stroke();
   });
 
-  const wheelDisplayY = h * 0.72;
+  const wheelDisplayY = h * 0.85;
   const wheelSpacing = Math.max(60, w * 0.15);
   const wheelRadius = Math.max(18, w * 0.07);
   drawWheelMechanism(ctx, cx - wheelSpacing, wheelDisplayY, wheelRadius, ph, true, 'RIGHT');
