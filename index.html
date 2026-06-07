@@ -1103,7 +1103,7 @@ function render3(ph) {
   const rSwingDeg = getWheelRotation(ph, S.swing, true);
   const lSwingDeg = getWheelRotation(ph, S.swing, false);
 
-  drawGraph(ctx, 22, h * 0.7, w - 28, h * 0.2, 'Swing', history.swing, '#ff6e50', '#38d9a9', -S.swing, S.swing);
+  drawGraph(ctx, 200, h * 0.7, w - 28, h * 0.2, 'Swing', history.swing, '#ff6e50', '#38d9a9', -S.swing, S.swing);
 
   document.getElementById('r3').innerHTML =
     `<b>R SWING</b> ${rSwingDeg>=0?'+':''}${rSwingDeg.toFixed(1)}°<br>` +
