@@ -213,6 +213,42 @@ input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.3); }
 .pbar-wrap { height: 2px; background: var(--border); border-radius: 1px; margin-top: 10px; overflow: hidden; }
 .pbar { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--left)); border-radius: 1px; }
 
+/* ── MOBILE RESPONSIVENESS ── */
+@media (max-width: 768px) {
+  header { padding: 0 16px; height: 40px; }
+  header h1 { font-size: 0.9rem; }
+  .hdr-pill { font-size: 0.45rem; padding: 2px 6px; }
+  .live { font-size: 0.45rem; gap: 4px; }
+  .live-dot { width: 4px; height: 4px; }
+  
+  .panel { width: 180px; }
+  .psec { padding: 10px 12px; }
+  .psec-title { font-size: 0.6rem; margin-bottom: 8px; }
+  .srow { margin-bottom: 8px; }
+  .sname { font-size: 0.48rem; }
+  .sval { font-size: 0.54rem; }
+  .mbtn { padding: 6px 3px; font-size: 0.75rem; }
+  
+  .readout { font-size: 0.45rem; bottom: 6px; left: 8px; line-height: 1.6; }
+  .view-tag { font-size: 0.65rem; top: 6px; left: 8px; }
+  .view-sub { font-size: 0.4rem; top: 20px; left: 8px; }
+}
+
+@media (max-width: 480px) {
+  .panel { width: 150px; }
+  .psec { padding: 8px 10px; }
+  .psec-title { font-size: 0.55rem; margin-bottom: 6px; }
+  .srow { margin-bottom: 6px; }
+  .sname { font-size: 0.45rem; }
+  .sval { font-size: 0.5rem; }
+  .mbtn { padding: 5px 2px; font-size: 0.65rem; }
+  .readout { font-size: 0.4rem; }
+  .view-tag { font-size: 0.55rem; }
+  .view-sub { font-size: 0.35rem; }
+  
+  input[type=range]::-webkit-slider-thumb { width: 10px; height: 10px; }
+}
+
 </style>
 </head>
 <body>
@@ -875,8 +911,10 @@ function render1(ph) {
   drawSacrumFrontal(ctx, cx, cy, pelW);
 
   const camDisplayY = h * 0.65;
-  drawCamMechanism(ctx, cx - 80, camDisplayY, 30, ph, rightHikeOutput, 'RIGHT');
-  drawCamMechanism(ctx, cx + 80, camDisplayY, 30, ph, leftHikeOutput, 'LEFT');
+  const camSpacing = Math.max(60, w * 0.15);
+  const camRadius = Math.max(20, w * 0.08);
+  drawCamMechanism(ctx, cx - camSpacing, camDisplayY, camRadius, ph, rightHikeOutput, 'RIGHT');
+  drawCamMechanism(ctx, cx + camSpacing, camDisplayY, camRadius, (ph + 0.5) % 1, leftHikeOutput, 'LEFT');
 
   for(let g=4;g>=1;g--){
     const gph = ph - g*0.04;
@@ -938,8 +976,10 @@ function render2(ph) {
   const ac = drawPelvisTopDown(ctx, cx, cy, pelW, rightTiltRad, transRad);
 
   const crankDisplayY = h * 0.7;
-  drawCrankMechanism(ctx, cx - 80, crankDisplayY, 25, ph, rightCrankOutput, 'RIGHT');
-  drawCrankMechanism(ctx, cx + 80, crankDisplayY, 25, ph, leftCrankOutput, 'LEFT');
+  const crankSpacing = Math.max(60, w * 0.15);
+  const crankRadius = Math.max(20, w * 0.08);
+  drawCrankMechanism(ctx, cx - crankSpacing, crankDisplayY, crankRadius, ph, rightCrankOutput, 'RIGHT');
+  drawCrankMechanism(ctx, cx + crankSpacing, crankDisplayY, crankRadius, (ph + 0.5) % 1, leftCrankOutput, 'LEFT');
 
   for(let g=4;g>=1;g--){
     const gph = ph - g*0.04;
@@ -1013,8 +1053,10 @@ function render3(ph) {
   });
 
   const wheelDisplayY = h * 0.72;
-  drawWheelMechanism(ctx, cx - 80, wheelDisplayY, 25, ph, true, 'RIGHT');
-  drawWheelMechanism(ctx, cx + 80, wheelDisplayY, 25, ph, false, 'LEFT');
+  const wheelSpacing = Math.max(60, w * 0.15);
+  const wheelRadius = Math.max(18, w * 0.07);
+  drawWheelMechanism(ctx, cx - wheelSpacing, wheelDisplayY, wheelRadius, ph, true, 'RIGHT');
+  drawWheelMechanism(ctx, cx + wheelSpacing, wheelDisplayY, wheelRadius, ph, false, 'LEFT');
 
   const rSwingDeg = getWheelRotation(ph, S.swing, true);
   const lSwingDeg = -rSwingDeg;
