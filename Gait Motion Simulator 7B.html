@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pelvic Gait Simulator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;600;700&display=swap');
+
+:root {
+  --bg:      #0b0d12;
+  --surface: #10131a;
+  --card:    #14182200;
+  --border:  #1e2535;
+  --accent:  #f0c040;
+  --right:   #ff6e50;
+  --left:    #38d9a9;
+  --bone:    #c8d8ee;
+  --bone2:   #8aaace;
+  --bonedark:#1e2d46;
+  --text:    #c8d8f0;
+  --muted:   #445068;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Mono', monospace;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ── HEADER ── */
+header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 24px;
+  height: 46px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+header h1 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.hdr-sep { width: 1px; height: 20px; background: var(--border); }
+.hdr-pill {
+  font-size: 0.52rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+.live { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 0.52rem; letter-spacing: 0.2em; color: var(--left); }
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--left); animation: lp 1.4s ease-in-out infinite; }
+@keyframes lp { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ── BODY ── */
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── CANVASES ── */
+.views {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  min-width: 0;
+}
+.view {
+  background: var(--bg);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+canvas { display: block; width: 100%; height: 100%; }
+
+.view-tag {
+  position: absolute;
+  top: 10px; left: 12px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0.6;
+  pointer-events: none;
+}
+.view-sub {
+  position: absolute;
+  top: 26px; left: 12px;
+  font-size: 0.46rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  pointer-events: none;
+}
+.readout {
+  position: absolute;
+  bottom: 8px; left: 12px;
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  line-height: 1.8;
+  pointer-events: none;
+}
+.readout b { color: var(--accent); font-weight: 400; }
+
+/* ── CONTROLS PANEL ── */
+.panel {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.psec {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.psec-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+  opacity: 0.8;
+}
+
+/* Mode buttons */
+.mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.mbtn {
+  padding: 8px 4px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .18s;
+}
+.mbtn.on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(240,192,64,.06);
+}
+
+/* Sliders */
+.srow { margin-bottom: 10px; }
+.srow:last-child { margin-bottom: 0; }
+.shdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+.sname { font-size: 0.52rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.sval  { font-size: 0.58rem; font-weight: 500; color: var(--accent); }
+
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%; height: 2px;
+  background: var(--border);
+  border-radius: 1px;
+  outline: none;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px rgba(240,192,64,.5);
+  cursor: pointer;
+  transition: transform .12s;
+}
+input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.3); }
+
+/* Phase bar */
+.pbar-wrap { height: 2px; background: var(--border); border-radius: 1px; margin-top: 10px; overflow: hidden; }
+.pbar { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--left)); border-radius: 1px; }
+
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Pelvic Gait Simulator</h1>
+  <div class="hdr-sep"></div>
+  <span class="hdr-pill">3D Biomechanics</span>
+  <span class="hdr-pill">Frontal · Transverse · Sagittal</span>
+  <div class="live"><span class="live-dot"></span>LIVE</div>
+</header>
+
+<div class="body">
+
+  <div class="views">
+        <div class="view">
+          <span class="view-tag">Pelvic Hike</span>
+          <span class="view-sub">Frontal / Coronal Plane</span>
+          <canvas id="c1"></canvas>
+          <div class="readout" id="r1"></div>
+        </div>
+        <div class="view">
+          <span class="view-tag">Pelvic Tilt</span>
+          <span class="view-sub">Transverse / Superior Plane</span>
+          <canvas id="c2"></canvas>
+          <div class="readout" id="r2"></div>
+        </div>
+        <div class="view">
+          <span class="view-tag">Thigh Swing</span>
+          <span class="view-sub">Bilateral · Sagittal Plane</span>
+          <canvas id="c3"></canvas>
+          <div class="readout" id="r3"></div>
+        </div>
+  </div>
+
+  <div class="panel">
+    <div class="psec">
+      <div class="psec-title">Gait Mode</div>
+      <div class="mode-grid">
+        <button class="mbtn on" id="bWalk">Walk</button>
+        <button class="mbtn"    id="bRun">Run</button>
+      </div>
+      <div class="pbar-wrap"><div class="pbar" id="pbar"></div></div>
+    </div>
+
+    <div class="psec">
+      <div class="psec-title">Cadence</div>
+      <div class="srow">
+        <div class="shdr"><span class="sname">RPM (steps/min)</span><span class="sval" id="vRpm">90</span></div>
+        <input type="range" id="sRpm" min="20" max="200" value="90" step="1">
+      </div>
+    </div>
+
+    <div class="psec">
+      <div class="psec-title">Pelvic Hike</div>
+      <div class="srow">
+        <div class="shdr"><span class="sname">Hike Amplitude (°)</span><span class="sval" id="vHike">7</span></div>
+        <input type="range" id="sHike" min="0" max="25" value="7" step="0.5">
+      </div>
+    </div>
+
+    <div class="psec">
+      <div class="psec-title">Pelvic Tilt</div>
+      <div class="srow">
+        <div class="shdr"><span class="sname">Tilt Amplitude (°)</span><span class="sval" id="vTilt">4</span></div>
+        <input type="range" id="sTilt" min="0" max="20" value="4" step="0.5">
+      </div>
+    </div>
+
+    <div class="psec">
+      <div class="psec-title">Leg Swing</div>
+      <div class="srow">
+        <div class="shdr"><span class="sname">Swing Amplitude (°)</span><span class="sval" id="vSwing">35</span></div>
+        <input type="range" id="sSwing" min="0" max="65" value="35" step="0.5">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+const S = { rpm: 90, hike: 7, tilt: 4, swing: 35 };
+let mode = 'walk';
+let phase = 0, lastTS = null;
+
+// History buffers for graphing (store last 120 samples = 1 cycle at 60 RPM)
+const historyBuffer = 120;
+const history = {
+  hike: { right: [], left: [] },
+  tilt: { right: [], left: [] },
+  swing: { right: [], left: [] }
+};
+
+// Initialize history buffers
+for (let i = 0; i < historyBuffer; i++) {
+  history.hike.right.push(0);
+  history.hike.left.push(0);
+  history.tilt.right.push(0);
+  history.tilt.left.push(0);
+  history.swing.right.push(0);
+  history.swing.left.push(0);
+}
+
+// ─── SLIDERS ──────────────────────────────────────────────────────────────────
+function bindSlider(sid, vid, key, fmt) {
+  const sl = document.getElementById(sid);
+  const vl = document.getElementById(vid);
+  sl.addEventListener('input', () => { S[key] = +sl.value; vl.textContent = fmt(S[key]); });
+}
+bindSlider('sRpm',   'vRpm',   'rpm',   v => v);
+bindSlider('sHike',  'vHike',  'hike',  v => v + '°');
+bindSlider('sTilt',  'vTilt',  'tilt',  v => v + '°');
+bindSlider('sSwing', 'vSwing', 'swing', v => v + '°');
+
+document.getElementById('bWalk').addEventListener('click', () => setMode('walk'));
+document.getElementById('bRun').addEventListener('click',  () => setMode('run'));
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('bWalk').classList.toggle('on', m==='walk');
+  document.getElementById('bRun').classList.toggle('on',  m==='run');
+  const isRun = m === 'run';
+  const presets = isRun
+    ? { rpm:160, hike:13, tilt:8, swing:46 }
+    : { rpm:90,  hike:7,  tilt:4, swing:35 };
+  Object.entries(presets).forEach(([k,v]) => {
+    S[k] = v;
+    const sl = document.getElementById('s'+k[0].toUpperCase()+k.slice(1));
+    if(sl) sl.value = v;
+    const vl = document.getElementById('v'+k[0].toUpperCase()+k.slice(1));
+    const fmts = { rpm: v=>v, hike: v=>v+'°', tilt: v=>v+'°', swing: v=>v+'°' };
+    if(vl) vl.textContent = fmts[k](v);
+  });
+}
+
+// ─── CANVAS SETUP ─────────────────────────────────────────────────────────────
+function makeCanvas(id) {
+  const el = document.getElementById(id);
+  const dpr = window.devicePixelRatio || 1;
+  const ctx = el.getContext('2d');
+  function fit() {
+    const r = el.parentElement.getBoundingClientRect();
+    el.width  = r.width  * dpr;
+    el.height = r.height * dpr;
+    el.style.width  = r.width  + 'px';
+    el.style.height = r.height + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  fit();
+  window.addEventListener('resize', fit);
+  ctx._dpr = dpr; ctx._el = el;
+  return ctx;
+}
+const W = ctx => ctx._el.width  / ctx._dpr;
+const H = ctx => ctx._el.height / ctx._dpr;
+
+const ctx1 = makeCanvas('c1');
+const ctx2 = makeCanvas('c2');
+const ctx3 = makeCanvas('c3');
+
+// ─── UTIL ─────────────────────────────────────────────────────────────────────
+function bg(ctx) {
+  const w=W(ctx), h=H(ctx);
+  ctx.fillStyle = '#0b0d12';
+  ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle = 'rgba(240,192,64,0.025)';
+  ctx.lineWidth = 0.5;
+  for(let x=0;x<w;x+=36){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+  for(let y=0;y<h;y+=36){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+}
+function glow(ctx,col,blur){ ctx.shadowColor=col; ctx.shadowBlur=blur; }
+function noglow(ctx){ ctx.shadowColor='transparent'; ctx.shadowBlur=0; }
+function hexToRgb(h){ return { r:parseInt(h.slice(1,3),16), g:parseInt(h.slice(3,5),16), b:parseInt(h.slice(5,7),16) }; }
+
+function dref(ctx, x1,y1,x2,y2) {
+  ctx.save();
+  ctx.strokeStyle='rgba(255,255,255,0.04)';
+  ctx.lineWidth=1; ctx.setLineDash([4,8]);
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  ctx.setLineDash([]); ctx.restore();
+}
+
+// ─── GRAPHING ─────────────────────────────────────────────────────────────────
+function drawGraph(ctx, x, y, w, h, title, history, rightColor, leftColor, yMin, yMax) {
+  ctx.save();
+  ctx.translate(x, y);
+
+  // Background
+  ctx.fillStyle = 'rgba(20,30,48,0.8)';
+  ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = '#4a6888';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(0, 0, w, h);
+
+  // Title
+  ctx.fillStyle = '#38d9a9';
+  ctx.font = '11px Barlow Condensed';
+  ctx.textAlign = 'left';
+  ctx.fillText(title, 8, 16);
+
+  // Y-axis scale text
+  ctx.fillStyle = '#445068';
+  ctx.font = '8px IBM Plex Mono';
+  ctx.textAlign = 'right';
+  ctx.fillText(yMax.toFixed(0) + '°', -4, 14);
+  ctx.fillText('0°', -4, h / 2 + 4);
+  ctx.fillText(yMin.toFixed(0) + '°', -4, h - 4);
+
+  // Graph area
+  const graphX = 28;
+  const graphY = 22;
+  const graphW = w - graphX - 4;
+  const graphH = h - graphY - 4;
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(74,104,136,0.2)';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 4; i++) {
+    const gy = graphY + (graphH * i / 4);
+    ctx.beginPath();
+    ctx.moveTo(graphX, gy);
+    ctx.lineTo(graphX + graphW, gy);
+    ctx.stroke();
+  }
+
+  // Draw right leg (red)
+  if (history.right && history.right.length > 1) {
+    ctx.strokeStyle = rightColor;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let i = 0; i < history.right.length; i++) {
+      const px = graphX + (i / (history.right.length - 1)) * graphW;
+      const val = history.right[i];
+      const py = graphY + graphH * (1 - (val - yMin) / (yMax - yMin));
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+
+  // Draw left leg (green)
+  if (history.left && history.left.length > 1) {
+    ctx.strokeStyle = leftColor;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let i = 0; i < history.left.length; i++) {
+      const px = graphX + (i / (history.left.length - 1)) * graphW;
+      const val = history.left[i];
+      const py = graphY + graphH * (1 - (val - yMin) / (yMax - yMin));
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+// ─── MECHANICAL MECHANISMS ────────────────────────────────────────────────────
+function getCamOutput(phase, delay, majorAmp, minorAmp) {
+  const rpm = 60;  
+  const f = rpm / 60.0;  
+  const t = phase;  
+  const s = Math.sin(2 * Math.PI * f * (t - delay));
+  return s >= 0 ? majorAmp * s : minorAmp * (-s);
+}
+
+function getCrankOutput(phase, amplitude) {
+  const crankPhase = phase * Math.PI * 2;
+  return amplitude * Math.cos(crankPhase);
+}
+
+function getWheelRotation(phase, amplitude, isRight) {
+  const wheelPhase = isRight ? phase : (phase + 0.5) % 1;
+  const wheelRad = wheelPhase * Math.PI * 2;
+  return amplitude * Math.sin(wheelRad);
+}
+
+// ─── 3D BIOMECHANICS ENGINE ───────────────────────────────────────────────────
+function getLeg3D(ph, isRight) {
+  const p = ((isRight ? ph : ph + 0.5) % 1 + 1) % 1;
+  const swingDeg = getWheelRotation(ph, S.swing, isRight);
+  const swingRad = swingDeg * Math.PI / 180;
+
+  let kneeRad = 0;
+  const swingPhase = p >= 0.5 ? (p - 0.5) * 2 : p * 2;
+  if (p >= 0.5) {
+    const maxKnee = mode === 'run' ? 90 : 50;
+    kneeRad = (maxKnee * Math.sin(Math.PI * swingPhase)) * Math.PI / 180;
+  } else {
+    kneeRad = (15 * Math.sin(Math.PI * swingPhase)) * Math.PI / 180;
+  }
+
+  const L_Thigh = 80;
+  const L_Calf = 85;
+  const L_Foot = 25;
+
+  const kx = 0;
+  const ky = L_Thigh * Math.cos(swingRad);
+  const kz = L_Thigh * Math.sin(swingRad);
+
+  const lowerAngle = swingRad - kneeRad;
+  const ax = kx;
+  const ay = ky + L_Calf * Math.cos(lowerAngle);
+  const az = kz + L_Calf * Math.sin(lowerAngle);
+
+  const footAngle = lowerAngle + Math.PI/2 - 0.2;
+  const tx = ax;
+  const ty = ay + L_Foot * Math.cos(footAngle);
+  const tz = az + L_Foot * Math.sin(footAngle);
+
+  return {
+    hip: { x:0, y:0, z:0 },
+    knee: { x:kx, y:ky, z:kz },
+    ankle: { x:ax, y:ay, z:az },
+    toe: { x:tx, y:ty, z:tz }
+  };
+}
+
+function drawHumanLeg(ctx, hx, hy, leg3D, view, col, alpha=1) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  const pts = [leg3D.hip, leg3D.knee, leg3D.ankle, leg3D.toe];
+  let p2d;
+
+  if (view === 'front') {
+    p2d = pts.map(p => ({ x: hx + p.x, y: hy + p.y, z: p.z }));
+  } else if (view === 'top') {
+    p2d = pts.map(p => ({ x: hx + p.x, y: hy - p.z, z: -p.y }));
+  } else if (view === 'side') {
+    p2d = pts.map(p => ({ x: hx + p.z, y: hy + p.y, z: p.x }));
+  }
+
+  const [H, K, A, T] = p2d;
+
+  function getW(baseW, z) {
+    const scale = Math.max(0.3, 1 + (z / 220)); 
+    return baseW * scale;
+  }
+
+  const hw = getW(18, H.z);
+  const kw = getW(12, K.z);
+  const aw = getW(7, A.z);
+  const tw = getW(6, T.z);
+
+  function drawSeg(p1, p2, w1, w2, color) {
+    const dx = p2.x - p1.x, dy = p2.y - p1.y;
+    const len = Math.hypot(dx, dy);
+    if(len < 0.1) return;
+    const nx = -dy / len, ny = dx / len;
+
+    ctx.beginPath();
+    ctx.moveTo(p1.x + nx * w1, p1.y + ny * w1);
+    ctx.lineTo(p2.x + nx * w2, p2.y + ny * w2);
+    ctx.arc(p2.x, p2.y, w2, Math.atan2(dy, dx) - Math.PI/2, Math.atan2(dy, dx) + Math.PI/2);
+    ctx.lineTo(p1.x - nx * w1, p1.y - ny * w1);
+    ctx.arc(p1.x, p1.y, w1, Math.atan2(-dy, -dx) - Math.PI/2, Math.atan2(-dy, -dx) + Math.PI/2);
+    ctx.closePath();
+
+    const g = ctx.createLinearGradient(p1.x + nx*w1, p1.y + ny*w1, p1.x - nx*w1, p1.y - ny*w1);
+    const c = hexToRgb(color);
+    g.addColorStop(0, `rgba(${c.r},${c.g},${c.b},0.2)`);
+    g.addColorStop(0.4, `rgba(${c.r},${c.g},${c.b},0.8)`);
+    g.addColorStop(1, `rgba(${c.r},${c.g},${c.b},0.15)`);
+
+    ctx.fillStyle = g; ctx.fill();
+    ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.stroke();
+  }
+
+  drawSeg(H, K, hw, kw, col); 
+  drawSeg(K, A, kw, aw, col); 
+  drawSeg(A, T, aw, tw, col); 
+
+  ctx.restore();
+}
+
+// ─── MECHANISM VISUALIZATION ──────────────────────────────────────────────────
+function drawCamMechanism(ctx, cx, cy, radius, phase, output, label) {
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  const R = radius * 1.6;  
+  const camPhase = (phase * Math.PI * 2) % (Math.PI * 2);
+  
+  ctx.beginPath();
+  for (let a = 0; a < Math.PI * 2; a += 0.05) {
+    const majorLobe = Math.max(0, Math.cos(a - camPhase));
+    const minorLobe = 0.25 * Math.sin(2 * (a - camPhase));
+    const r = R * (0.5 + 0.35 * majorLobe + 0.1 * minorLobe);
+    const x = r * Math.cos(a);
+    const y = r * Math.sin(a);
+    if (a === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  
+  const camGrad = ctx.createRadialGradient(0, 0, R * 0.2, 0, 0, R);
+  camGrad.addColorStop(0, '#1a2840');
+  camGrad.addColorStop(1, '#0b121e');
+  ctx.fillStyle = camGrad;
+  ctx.fill();
+  ctx.strokeStyle = '#38d9a9';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  const topAngle = -Math.PI / 2; 
+  const majorLobe = Math.max(0, Math.cos(topAngle - camPhase));
+  const minorLobe = 0.25 * Math.sin(2 * (topAngle - camPhase));
+  const followerRadius = R * (0.5 + 0.35 * majorLobe + 0.1 * minorLobe);
+  const pinY = -followerRadius;  
+  
+  ctx.beginPath();
+  ctx.arc(0, pinY, 5, 0, Math.PI * 2);
+  ctx.fillStyle = label === 'RIGHT' ? '#ff6e50' : '#38d9a9';
+  ctx.fill();
+
+  ctx.fillStyle = '#445068';
+  ctx.font = '10px Barlow Condensed';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, 0, R + 18);
+
+  ctx.restore();
+}
+
+function drawCrankMechanism(ctx, cx, cy, radius, phase, output, label) {
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  const R = radius * 2.2;  
+
+  ctx.beginPath();
+  ctx.arc(0, 0, R, 0, Math.PI * 2);
+  ctx.strokeStyle = '#4a6888';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(0, 0, R * 0.2, 0, Math.PI * 2);
+  ctx.fillStyle = '#141e30';
+  ctx.fill();
+  ctx.strokeStyle = '#4a6888';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  const crankPhase = phase * Math.PI * 2;
+  const armLength = R * 0.5;  
+  const pinX = armLength * Math.cos(crankPhase);
+  const pinY = armLength * Math.sin(crankPhase);
+
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(pinX, pinY);
+  ctx.strokeStyle = '#4a6890';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(pinX, pinY, 6, 0, Math.PI * 2);
+  ctx.fillStyle = label === 'RIGHT' ? '#ff6e50' : '#38d9a9';
+  ctx.fill();
+
+  const followerX = output * 0.4;
+  ctx.beginPath();
+  ctx.moveTo(pinX, pinY);
+  ctx.lineTo(followerX + 12, pinY);
+  ctx.strokeStyle = 'rgba(240,192,64,0.3)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.fillStyle = '#445068';
+  ctx.font = '10px Barlow Condensed';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, 0, R + 18);
+
+  ctx.restore();
+}
+
+function drawWheelMechanism(ctx, cx, cy, radius, phase, isRight, label) {
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  const wheelPhase = isRight ? phase : (phase + 0.5) % 1;
+  const wheelRad = wheelPhase * Math.PI * 2;
+
+  ctx.beginPath();
+  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  ctx.strokeStyle = '#4a6888';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2 + wheelRad;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(radius * Math.cos(a), radius * Math.sin(a));
+    ctx.strokeStyle = '#2a3e5a';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  const pinX = radius * Math.cos(wheelRad);
+  const pinY = radius * Math.sin(wheelRad);
+  ctx.beginPath();
+  ctx.arc(pinX, pinY, 5, 0, Math.PI * 2);
+  ctx.fillStyle = isRight ? '#ff6e50' : '#38d9a9';
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(0, 0, radius * 0.25, 0, Math.PI * 2);
+  ctx.fillStyle = '#141e30';
+  ctx.fill();
+  ctx.strokeStyle = '#4a6888';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = '#445068';
+  ctx.font = '10px Barlow Condensed';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, 0, radius + 18);
+
+  ctx.restore();
+}
+
+// ─── PELVIS COMPONENTS ────────────────────────────────────────────────────────
+function drawSacrumFrontal(ctx, cx, cy, pelW) {
+  ctx.save(); ctx.translate(cx,cy);
+  const sW=pelW*0.28, sTop=-pelW*0.52, sBot=pelW*0.18;
+  ctx.beginPath();
+  ctx.moveTo(-sW*0.9,sTop);
+  ctx.bezierCurveTo(-sW*1.1,sTop*0.5,-sW*0.9,sBot*0.3,-sW*0.5,sBot);
+  ctx.bezierCurveTo(-sW*0.15,sBot*1.12,sW*0.15,sBot*1.12,sW*0.5,sBot);
+  ctx.bezierCurveTo(sW*0.9,sBot*0.3,sW*1.1,sTop*0.5,sW*0.9,sTop);
+  ctx.bezierCurveTo(sW*0.55,sTop*1.1,-sW*0.55,sTop*1.1,-sW*0.9,sTop);
+  ctx.closePath();
+  const sg=ctx.createLinearGradient(-sW,sTop,sW,sBot);
+  sg.addColorStop(0,'#283850'); sg.addColorStop(1,'#141e30');
+  ctx.fillStyle=sg; ctx.fill();
+  ctx.strokeStyle='#3a5270'; ctx.lineWidth=1.4; ctx.stroke();
+  for(let i=0;i<3;i++){
+    const fy=sTop+(i+1)*(sBot-sTop)*0.22;
+    const fx=sW*0.38;
+    [[-fx,fy],[fx,fy]].forEach(([x,y])=>{
+      ctx.beginPath(); ctx.ellipse(x,y,2.2,1.6,0,0,Math.PI*2);
+      ctx.fillStyle='#0d1622'; ctx.fill();
+      ctx.strokeStyle='#2a3850'; ctx.lineWidth=0.7; ctx.stroke();
+    });
+  }
+  ctx.restore();
+}
+
+function drawIliumWorld(ctx, cx, cy, pelW, hikeRad, side) {
+  const ang = side * hikeRad;
+  const pivX = side === 1 ?  pelW * 0.22 : -pelW * 0.22;
+  const pivY = -pelW * 0.62 * 0.62;
+
+  ctx.save();
+  ctx.translate(cx + pivX, cy + pivY);
+  ctx.rotate(-ang);
+
+  const ow = pelW * 0.72 * side;
+  const crestH = -pelW * 0.52;
+
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.bezierCurveTo(ow*0.3,  pelW*0.22, ow*0.75, pelW*0.26, ow*0.88, pelW*0.14);
+  ctx.bezierCurveTo(ow*0.95, pelW*0.04, ow*0.82,-pelW*0.02, ow*0.62,-pelW*0.08);
+  ctx.bezierCurveTo(ow*0.35,-pelW*0.14, ow*0.12,-pelW*0.16, 0,       -pelW*0.18);
+  ctx.bezierCurveTo(-side*pelW*0.04,-pelW*0.32,-side*pelW*0.02,crestH*0.6,side*pelW*0.05,crestH);
+  ctx.bezierCurveTo(ow*0.15,crestH*1.08,ow*0.55,crestH*1.06,ow*0.78,crestH*0.72);
+  ctx.bezierCurveTo(ow*0.88,crestH*0.4, ow*0.96,pelW*0.08,  ow*0.88,pelW*0.14);
+  ctx.closePath();
+
+  const iGrad = ctx.createLinearGradient(0,crestH,ow,pelW*0.2);
+  iGrad.addColorStop(0,'#243450'); iGrad.addColorStop(0.5,'#1a2840'); iGrad.addColorStop(1,'#111e32');
+  ctx.fillStyle = iGrad; ctx.fill();
+  glow(ctx,'#5a80b0',10);
+  ctx.strokeStyle='#4a6890'; ctx.lineWidth=1.6; ctx.stroke(); noglow(ctx);
+
+  const asisX=ow*0.78, asisY=crestH*0.72;
+  ctx.beginPath(); ctx.arc(asisX,asisY,3.5,0,Math.PI*2);
+  ctx.fillStyle='#e8f040'; glow(ctx,'#e8f040',8); ctx.fill(); noglow(ctx);
+
+  const acX=ow*0.76, acY=pelW*0.12, acR=pelW*0.18;
+  const acGrad=ctx.createRadialGradient(acX,acY,1,acX,acY,acR);
+  acGrad.addColorStop(0,'#080f1c'); acGrad.addColorStop(0.6,'#162030'); acGrad.addColorStop(1,'#2a3e5a');
+  ctx.beginPath(); ctx.arc(acX,acY,acR,0,Math.PI*2);
+  ctx.fillStyle=acGrad; ctx.fill();
+  ctx.beginPath(); ctx.arc(acX,acY,acR,0,Math.PI*2);
+  ctx.strokeStyle='#4a6888'; ctx.lineWidth=2.2; ctx.stroke();
+
+  ctx.restore();
+
+  const cosA=Math.cos(-ang), sinA=Math.sin(-ang);
+  return { x: cx + pivX + acX*cosA - acY*sinA, y: cy + pivY + acX*sinA + acY*cosA, r: acR };
+}
+
+function drawPelvisTopDown(ctx, cx, cy, pelW, tiltRad, transRad) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(transRad);
+
+  const frontY = -pelW * 0.55 + tiltRad * 120;
+  const backY  = pelW * 0.45 - tiltRad * 60;
+  const rimX   = pelW * 0.85;
+
+  ctx.beginPath();
+  ctx.moveTo(0, frontY); 
+  ctx.bezierCurveTo(rimX, frontY, rimX + 15, 0, rimX, backY - 20); 
+  ctx.bezierCurveTo(rimX - 25, backY + 15, 20, backY, 0, backY);
+  ctx.bezierCurveTo(-20, backY, -(rimX - 25), backY + 15, -rimX, backY - 20); 
+  ctx.bezierCurveTo(-(rimX + 15), 0, -rimX, frontY, 0, frontY); 
+  ctx.closePath();
+
+  const g = ctx.createLinearGradient(0, frontY, 0, backY);
+  g.addColorStop(0, '#1a2840');
+  g.addColorStop(1, '#0b121e');
+  ctx.fillStyle = g; ctx.fill();
+  glow(ctx, '#4a6888', 12);
+  ctx.strokeStyle = '#4a6888'; ctx.lineWidth = 2.5; ctx.stroke(); noglow(ctx);
+
+  ctx.beginPath(); ctx.arc(0, frontY + 8, 6, 0, Math.PI*2); ctx.fillStyle='#3a5878'; ctx.fill();
+  ctx.beginPath(); ctx.arc(0, backY - 12, 10, 0, Math.PI*2); ctx.fillStyle='#141e30'; ctx.fill();
+
+  ctx.restore();
+
+  const acY = (frontY + backY) * 0.25;
+  const acX = rimX * 0.95;
+  const cosR = Math.cos(transRad), sinR = Math.sin(transRad);
+
+  return {
+    right: { x: cx + acX * cosR - acY * sinR, y: cy + acX * sinR + acY * cosR },
+    left:  { x: cx - acX * cosR - acY * sinR, y: cy - acX * sinR + acY * cosR }
+  };
+}
+
+// ─── RENDER 1: PELVIC HIKE (Frontal 3D) ──────────────────────────────────────
+function render1(ph) {
+  const ctx=ctx1, w=W(ctx), h=H(ctx);
+  bg(ctx);
+
+  const cx=w/2, cy=h*0.32;
+  const pelW=Math.min(w,h)*0.36;
+
+  dref(ctx, 30,cy,w-30,cy);
+  dref(ctx, cx,20,cx,h-20);
+
+  const camMajorAmp = S.hike * 0.75;
+  const camMinorAmp = S.hike * 0.2;
+  const rightHikeOutput = getCamOutput(ph, 0, camMajorAmp, camMinorAmp); 
+  const leftHikeOutput = getCamOutput(ph, 0.5, camMajorAmp, camMinorAmp); 
+
+  const rightHikeRad = rightHikeOutput * Math.PI / 180;
+  const leftHikeRad = leftHikeOutput * Math.PI / 180;
+
+  const ac = {
+    right: drawIliumWorld(ctx, cx, cy, pelW, rightHikeRad,  1),
+    left:  drawIliumWorld(ctx, cx, cy, pelW, leftHikeRad,  -1),
+  };
+  drawSacrumFrontal(ctx, cx, cy, pelW);
+
+  const camDisplayY = h * 0.65;
+  drawCamMechanism(ctx, cx - 80, camDisplayY, 30, ph, rightHikeOutput, 'RIGHT');
+  drawCamMechanism(ctx, cx + 80, camDisplayY, 30, ph, leftHikeOutput, 'LEFT');
+
+  for(let g=4;g>=1;g--){
+    const gph = ph - g*0.04;
+    const rLegG = getLeg3D(gph, true);
+    const lLegG = getLeg3D(gph, false);
+    const op = (5-g)/4 * 0.12;
+    drawHumanLeg(ctx, ac.right.x, ac.right.y, rLegG, 'front', '#ff6e50', op);
+    drawHumanLeg(ctx, ac.left.x, ac.left.y, lLegG, 'front', '#38d9a9', op);
+  }
+
+  const rLeg = getLeg3D(ph, true);
+  const lLeg = getLeg3D(ph, false);
+  
+  const rZ = rLeg.knee.z;
+  const lZ = lLeg.knee.z;
+
+  if (rZ < lZ) {
+    drawHumanLeg(ctx, ac.right.x, ac.right.y, rLeg, 'front', '#ff6e50');
+    drawHumanLeg(ctx, ac.left.x, ac.left.y, lLeg, 'front', '#38d9a9');
+  } else {
+    drawHumanLeg(ctx, ac.left.x, ac.left.y, lLeg, 'front', '#38d9a9');
+    drawHumanLeg(ctx, ac.right.x, ac.right.y, rLeg, 'front', '#ff6e50');
+  }
+
+  const avgHike = (rightHikeOutput + leftHikeOutput) / 2;
+  const isRStance = rightHikeOutput > leftHikeOutput;
+  ctx.fillStyle='#e8f04066'; ctx.font='bold 9px Barlow Condensed'; ctx.textAlign='center';
+  ctx.fillText(isRStance?'R HIKE':'L HIKE', cx, h-16); ctx.textAlign='left';
+
+  drawGraph(ctx, 12, h * 0.75, w - 24, h * 0.22, 'Hike', history.hike, '#ff6e50', '#38d9a9', -S.hike, S.hike);
+
+  document.getElementById('r1').innerHTML =
+    `<b>R HIKE</b> ${rightHikeOutput.toFixed(1)}°<br>` +
+    `<b>L HIKE</b> ${leftHikeOutput.toFixed(1)}°<br>` +
+    `<b>PHASE</b> ${(ph*360).toFixed(0)}°`;
+}
+
+
+// ─── RENDER 2: PELVIC TILT (Transverse Top-Down) ─────────────────────────────
+function render2(ph) {
+  const ctx=ctx2, w=W(ctx), h=H(ctx);
+  bg(ctx);
+
+  const cx=w*0.5, cy=h*0.32;
+
+  dref(ctx, cx,20,cx,h*0.65);
+  dref(ctx, 30,cy,w-30,cy);
+
+  const crankAmp = S.tilt * 0.8;
+  const rightCrankOutput = getCrankOutput(ph, crankAmp);
+  const leftCrankOutput = -rightCrankOutput; 
+
+  const rightTiltRad = rightCrankOutput * Math.PI / 180;
+  const leftTiltRad = leftCrankOutput * Math.PI / 180;
+
+  const transRad = S.swing * 0.22 * Math.cos(2*Math.PI*ph) * Math.PI/180;
+
+  const pelW = Math.min(w,h)*0.35;
+  const ac = drawPelvisTopDown(ctx, cx, cy, pelW, rightTiltRad, transRad);
+
+  const crankDisplayY = h * 0.7;
+  drawCrankMechanism(ctx, cx - 80, crankDisplayY, 25, ph, rightCrankOutput, 'RIGHT');
+  drawCrankMechanism(ctx, cx + 80, crankDisplayY, 25, ph, leftCrankOutput, 'LEFT');
+
+  for(let g=4;g>=1;g--){
+    const gph = ph - g*0.04;
+    const rLegG = getLeg3D(gph, true);
+    const lLegG = getLeg3D(gph, false);
+    const op = (5-g)/4 * 0.12;
+    drawHumanLeg(ctx, ac.right.x, ac.right.y, rLegG, 'top', '#ff6e50', op);
+    drawHumanLeg(ctx, ac.left.x, ac.left.y, lLegG, 'top', '#38d9a9', op);
+  }
+
+  const rLeg = getLeg3D(ph, true);
+  const lLeg = getLeg3D(ph, false);
+  
+  if (rLeg.knee.y > lLeg.knee.y) {
+    drawHumanLeg(ctx, ac.right.x, ac.right.y, rLeg, 'top', '#ff6e50');
+    drawHumanLeg(ctx, ac.left.x, ac.left.y, lLeg, 'top', '#38d9a9');
+  } else {
+    drawHumanLeg(ctx, ac.left.x, ac.left.y, lLeg, 'top', '#38d9a9');
+    drawHumanLeg(ctx, ac.right.x, ac.right.y, rLeg, 'top', '#ff6e50');
+  }
+
+  const rTilt = (rightTiltRad*180/Math.PI).toFixed(1);
+  const lTilt = (leftTiltRad*180/Math.PI).toFixed(1);
+
+  drawGraph(ctx, 12, h * 0.75, w - 24, h * 0.22, 'Tilt', history.tilt, '#ff6e50', '#38d9a9', -S.tilt, S.tilt);
+
+  document.getElementById('r2').innerHTML =
+    `<b>R TILT</b> ${rTilt}° (${rightTiltRad>0?'Anterior':'Posterior'})<br>` +
+    `<b>L TILT</b> ${lTilt}° (${leftTiltRad>0?'Anterior':'Posterior'})<br>` +
+    `<b>YAW</b> ${(transRad*180/Math.PI).toFixed(1)}°`;
+}
+
+
+// ─── RENDER 3: THIGH SWING (Sagittal Side View) ──────────────────────────────
+function render3(ph) {
+  const ctx=ctx3, w=W(ctx), h=H(ctx);
+  bg(ctx);
+
+  const cx=w*0.5, cy=h*0.28;
+  dref(ctx, cx-60,cy, cx+60,cy);
+  dref(ctx, cx,cy-15, cx,h*0.65);
+
+  const pelW=Math.min(w,h)*0.13;
+  ctx.save(); ctx.translate(cx,cy);
+  const pw=58;
+  ctx.beginPath();
+  ctx.moveTo(-pw,-12); ctx.bezierCurveTo(-pw*0.9,-22,-pw*0.4,-28,0,-26); ctx.bezierCurveTo(pw*0.4,-28,pw*0.9,-22,pw,-12);
+  ctx.bezierCurveTo(pw,0,pw*0.7,10,pw*0.5,12); ctx.bezierCurveTo(pw*0.2,14,-pw*0.2,14,-pw*0.5,12); ctx.bezierCurveTo(-pw*0.7,10,-pw,0,-pw,-12);
+  ctx.closePath();
+  const pelG=ctx.createLinearGradient(-pw,-28,pw,14);
+  pelG.addColorStop(0,'#243452'); pelG.addColorStop(1,'#101828');
+  ctx.fillStyle=pelG; ctx.fill();
+  ctx.strokeStyle='#4a6888'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.restore();
+
+  const rHx=cx+15, lHx=cx-15;
+  
+  for(let g=4;g>=1;g--){
+    const gph = ph - g*0.04;
+    drawHumanLeg(ctx, rHx, cy, getLeg3D(gph, true), 'side', '#ff6e50', (5-g)/4 * 0.1);
+    drawHumanLeg(ctx, lHx, cy, getLeg3D(gph, false), 'side', '#38d9a9', (5-g)/4 * 0.1);
+  }
+
+  drawHumanLeg(ctx, lHx, cy, getLeg3D(ph, false), 'side', '#38d9a9', 0.55);
+  drawHumanLeg(ctx, rHx, cy, getLeg3D(ph, true), 'side', '#ff6e50', 1);
+
+  [[rHx,'#ff6e50'],[lHx,'#38d9a9']].forEach(([hx,col])=>{
+    ctx.beginPath(); ctx.arc(hx,cy,7,0,Math.PI*2);
+    ctx.fillStyle='#060e1c'; ctx.fill();
+    ctx.strokeStyle=col; ctx.lineWidth=2; ctx.stroke();
+  });
+
+  const wheelDisplayY = h * 0.72;
+  drawWheelMechanism(ctx, cx - 80, wheelDisplayY, 25, ph, true, 'RIGHT');
+  drawWheelMechanism(ctx, cx + 80, wheelDisplayY, 25, ph, false, 'LEFT');
+
+  const rSwingDeg = getWheelRotation(ph, S.swing, true);
+  const lSwingDeg = -rSwingDeg;
+
+  drawGraph(ctx, 12, h * 0.75, w - 24, h * 0.22, 'Swing', history.swing, '#ff6e50', '#38d9a9', -S.swing, S.swing);
+
+  document.getElementById('r3').innerHTML =
+    `<b>R SWING</b> ${rSwingDeg>=0?'+':''}${rSwingDeg.toFixed(1)}°<br>` +
+    `<b>L SWING</b> ${lSwingDeg>=0?'+':''}${lSwingDeg.toFixed(1)}°<br>` +
+    `<b>TOTAL ARC</b> ${(S.swing*2).toFixed(0)}°`;
+}
+
+// ─── DATA HISTORY UPDATE ─────────────────────────────────────────────────────
+function updateHistory(ph) {
+  const camMajorAmp = S.hike * 0.75;
+  const camMinorAmp = S.hike * 0.2;
+  const rightHikeOutput = getCamOutput(ph, 0, camMajorAmp, camMinorAmp);
+  const leftHikeOutput = getCamOutput(ph, 0.5, camMajorAmp, camMinorAmp);
+
+  const crankAmp = S.tilt * 0.8;
+  const rightCrankOutput = getCrankOutput(ph, crankAmp);
+  const leftCrankOutput = -rightCrankOutput;
+
+  const rSwingDeg = getWheelRotation(ph, S.swing, true);
+  const lSwingDeg = -rSwingDeg;
+
+  history.hike.right.push(rightHikeOutput);
+  history.hike.left.push(leftHikeOutput);
+  history.tilt.right.push(rightCrankOutput);
+  history.tilt.left.push(leftCrankOutput);
+  history.swing.right.push(rSwingDeg);
+  history.swing.left.push(lSwingDeg);
+
+  if (history.hike.right.length > historyBuffer) {
+    history.hike.right.shift();
+    history.hike.left.shift();
+    history.tilt.right.shift();
+    history.tilt.left.shift();
+    history.swing.right.shift();
+    history.swing.left.shift();
+  }
+}
+
+// ─── ANIMATION LOOP ───────────────────────────────────────────────────────────
+function loop(ts) {
+  if(!lastTS) lastTS=ts;
+  const dt=Math.min((ts-lastTS)/1000,0.05);
+  lastTS=ts;
+
+  const freq=S.rpm/120;
+  phase=(phase+dt*freq)%1;
+
+  updateHistory(phase);
+
+  render1(phase);
+  render2(phase);
+  render3(phase);
+
+  document.getElementById('pbar').style.width=(phase*100)+'%';
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
