@@ -394,8 +394,10 @@ function drawCamMechanism(ctx, cx, cy, radius, offset, outputVal, label) {
   for (let i = 0; i <= STEPS; i++) {
     const relA = (i / STEPS) * Math.PI * 2;
     const worldA = relA + camAngle;
-    const r = baseR + majorR * Math.max(0, -Math.sin(relA)) + minorR * Math.max(0, Math.sin(relA));
-    if (i === 0) ctx.moveTo(r * Math.cos(worldA), r * Math.sin(worldA));
+    const isLeft = label === 'LEFT';
+  const lobeA = isLeft ? minorR : majorR;
+  const lobeB = isLeft ? majorR : minorR;
+  const r = baseR + lobeA * Math.max(0, -Math.sin(relA)) + lobeB * Math.max(0, Math.sin(relA));    if (i === 0) ctx.moveTo(r * Math.cos(worldA), r * Math.sin(worldA));
     else         ctx.lineTo(r * Math.cos(worldA), r * Math.sin(worldA));
   }
   ctx.closePath();
