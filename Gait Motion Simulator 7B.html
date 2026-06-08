@@ -890,7 +890,20 @@ function render1(ph) {
   const ctx=ctx1, w=W(ctx), h=H(ctx);
   bg(ctx);
 
-  const cx=w/2, cy=h*0.32;
+  const cx = w / 2;
+  const padding = 12;
+  const pelH = 60;
+  const cy = padding + pelH;
+  const legLength = Math.min(h * 0.28, 180);
+  const legBot = cy + legLength;
+  const wheelRadius = Math.min(24, Math.max(16, w * 0.065));
+  const wheelGap = 16;
+  const wheelDisplayY = legBot + wheelGap + wheelRadius;
+  const wheelOffset = Math.min(w * 0.28, cx - wheelRadius - 8);
+  const mechBot = wheelDisplayY + wheelRadius + 20;
+  const graphGap = 12;
+  const graphTop = mechBot + graphGap;
+  const graphH = h - graphTop - padding;
   const pelW=Math.min(w,h)*0.36;
 
   dref(ctx, 30,cy,w-30,cy);
@@ -957,7 +970,19 @@ function render2(ph) {
   const ctx=ctx2, w=W(ctx), h=H(ctx);
   bg(ctx);
 
-  const cx=w*0.5, cy=h*0.32;
+  const cx = w / 2;
+  const padding = 12;
+  const pelW = Math.min(w, h) * 0.35;
+  const cy = padding + pelW * 0.6;
+  const pelvisBot = cy + pelW * 0.5;
+  const crankRadius = Math.min(24, Math.max(16, w * 0.065));
+  const crankGap = 16;
+  const crankDisplayY = pelvisBot + crankGap + crankRadius;
+  const crankOffset = Math.min(w * 0.28, cx - crankRadius - 8);
+  const mechBot = crankDisplayY + crankRadius + 20;
+  const graphGap = 12;
+  const graphTop = mechBot + graphGap;
+  const graphH = h - graphTop - padding;
 
   dref(ctx, cx,20,cx,h*0.65);
   dref(ctx, 30,cy,w-30,cy);
@@ -974,9 +999,6 @@ function render2(ph) {
   const pelW = Math.min(w,h)*0.35;
   const ac = drawPelvisTopDown(ctx, cx, cy, pelW, rightTiltRad, transRad);
 
-  const crankDisplayY = h * 0.85;
-  const crankSpacing = Math.max(60, w * 0.15);
-  const crankRadius = Math.max(20, w * 0.08);
   drawCrankMechanism(ctx, cx - crankSpacing, crankDisplayY, crankRadius, ph, rightCrankOutput, 'RIGHT');
   drawCrankMechanism(ctx, cx + crankSpacing, crankDisplayY, crankRadius, (ph + 0.5) % 1, leftCrankOutput, 'LEFT');
 
@@ -1003,8 +1025,9 @@ function render2(ph) {
   const rTilt = (rightTiltRad*180/Math.PI).toFixed(1);
   const lTilt = (leftTiltRad*180/Math.PI).toFixed(1);
 
-  drawGraph(ctx, 12, h * 0.75, w - 24, h * 0.22, 'Tilt', history.tilt, '#ff6e50', '#38d9a9', -S.tilt, S.tilt);
-
+  if (graphH >= 30) {
+  drawGraph(ctx, 20, graphTop, w - 28, graphH, 'Tilt', history.tilt, '#ff6e50', '#38d9a9', -S.tilt, S.tilt);
+}
   document.getElementById('r2').innerHTML =
     `<b>R TILT</b> ${rTilt}° (${rightTiltRad>0?'Anterior':'Posterior'})<br>` +
     `<b>L TILT</b> ${lTilt}° (${leftTiltRad>0?'Anterior':'Posterior'})<br>` +
@@ -1063,17 +1086,16 @@ function render3(ph) {
     ctx.strokeStyle=col; ctx.lineWidth=2; ctx.stroke();
   });
 
-  const wheelDisplayY = h * 0.85;
-  const wheelSpacing = Math.max(60, w * 0.15);
-  const wheelRadius = Math.max(18, w * 0.07);
+
   drawWheelMechanism(ctx, cx - wheelSpacing, wheelDisplayY, wheelRadius, ph, true, 'RIGHT');
   drawWheelMechanism(ctx, cx + wheelSpacing, wheelDisplayY, wheelRadius, ph, false, 'LEFT');
 
   const rSwingDeg = getWheelRotation(ph, S.swing, true);
   const lSwingDeg = -rSwingDeg;
 
-  drawGraph(ctx, 12, h * 0.75, w - 24, h * 0.22, 'Swing', history.swing, '#ff6e50', '#38d9a9', -S.swing, S.swing);
-
+if (graphH >= 30) {
+  drawGraph(ctx, 20, graphTop, w - 28, graphH, 'Swing', history.swing, '#ff6e50', '#38d9a9', -S.swing, S.swing);
+}
   document.getElementById('r3').innerHTML =
     `<b>R SWING</b> ${rSwingDeg>=0?'+':''}${rSwingDeg.toFixed(1)}°<br>` +
     `<b>L SWING</b> ${lSwingDeg>=0?'+':''}${lSwingDeg.toFixed(1)}°<br>` +
