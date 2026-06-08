@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Pelvic Gait Simulator</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;600;700&display=swap');
@@ -23,7 +23,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; overflow: hidden; }
+html, body { min-height: 100%; overflow: hidden; }
 
 body {
   background: var(--bg);
@@ -31,7 +31,8 @@ body {
   font-family: 'IBM Plex Mono', monospace;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 /* ── HEADER ── */
@@ -89,6 +90,7 @@ header h1 {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-height: 0;
 }
 canvas { display: block; width: 100%; height: 100%; }
 
@@ -115,7 +117,7 @@ canvas { display: block; width: 100%; height: 100%; }
 }
 .readout {
   position: absolute;
-  bottom: 8px; left: 12px;
+  top: 46px; left: 12px;
   font-size: 0.5rem;
   letter-spacing: 0.1em;
   color: var(--muted);
@@ -213,40 +215,77 @@ input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.3); }
 .pbar-wrap { height: 2px; background: var(--border); border-radius: 1px; margin-top: 10px; overflow: hidden; }
 .pbar { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--left)); border-radius: 1px; }
 
-/* ── MOBILE RESPONSIVENESS ── */
-@media (max-width: 768px) {
-  header { padding: 0 16px; height: 40px; }
-  header h1 { font-size: 0.9rem; }
-  .hdr-pill { font-size: 0.45rem; padding: 2px 6px; }
-  .live { font-size: 0.45rem; gap: 4px; }
-  .live-dot { width: 4px; height: 4px; }
-  
-  .panel { width: 180px; }
-  .psec { padding: 10px 12px; }
-  .psec-title { font-size: 0.6rem; margin-bottom: 8px; }
-  .srow { margin-bottom: 8px; }
-  .sname { font-size: 0.48rem; }
-  .sval { font-size: 0.54rem; }
-  .mbtn { padding: 6px 3px; font-size: 0.75rem; }
-  
-  .readout { font-size: 0.45rem; bottom: 6px; left: 8px; line-height: 1.6; }
-  .view-tag { font-size: 0.65rem; top: 6px; left: 8px; }
-  .view-sub { font-size: 0.4rem; top: 20px; left: 8px; }
+@media (max-width: 820px) {
+  html, body { overflow: auto; }
+
+  body { height: auto; }
+
+  header {
+    height: auto;
+    min-height: 46px;
+    padding: max(8px, env(safe-area-inset-top)) 12px 8px;
+    gap: 8px 12px;
+    flex-wrap: wrap;
+  }
+
+  header h1 {
+    flex-basis: 100%;
+    font-size: 1rem;
+    letter-spacing: 0.16em;
+  }
+
+  .hdr-sep { display: none; }
+  .hdr-pill { font-size: 0.48rem; }
+  .live { margin-left: 0; }
+
+  .body {
+    display: block;
+    min-height: auto;
+  }
+
+  .views {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1px;
+  }
+
+  .view {
+    height: clamp(430px, 62svh, 520px);
+    min-height: 340px;
+  }
+
+  .panel {
+    width: 100%;
+    border-left: 0;
+    border-top: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    overflow: visible;
+  }
+
+  .psec {
+    min-width: 0;
+    padding: 12px;
+    border-right: 1px solid var(--border);
+  }
+
+  .psec:first-child { grid-column: 1 / -1; }
+  .psec-title { font-size: 0.62rem; }
+  .readout { font-size: 0.48rem; }
 }
 
-@media (max-width: 480px) {
-  .panel { width: 150px; }
-  .psec { padding: 8px 10px; }
-  .psec-title { font-size: 0.55rem; margin-bottom: 6px; }
-  .srow { margin-bottom: 6px; }
-  .sname { font-size: 0.45rem; }
-  .sval { font-size: 0.5rem; }
-  .mbtn { padding: 5px 2px; font-size: 0.65rem; }
-  .readout { font-size: 0.4rem; }
-  .view-tag { font-size: 0.55rem; }
-  .view-sub { font-size: 0.35rem; }
-  
-  input[type=range]::-webkit-slider-thumb { width: 10px; height: 10px; }
+@media (max-width: 430px) {
+  .view {
+    height: clamp(500px, 64svh, 560px);
+    min-height: 0;
+  }
+
+  .panel {
+    grid-template-columns: 1fr;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .psec { border-right: 0; }
 }
 
 </style>
@@ -330,7 +369,7 @@ input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.3); }
 
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
-const S = { rpm: 60, hike: 7, tilt: 4, swing: 35 };
+const S = { rpm: 90, hike: 7, tilt: 4, swing: 35 };
 let mode = 'walk';
 let phase = 0, lastTS = null;
 
@@ -387,19 +426,21 @@ function setMode(m) {
 // ─── CANVAS SETUP ─────────────────────────────────────────────────────────────
 function makeCanvas(id) {
   const el = document.getElementById(id);
-  const dpr = window.devicePixelRatio || 1;
   const ctx = el.getContext('2d');
   function fit() {
+    const dpr = window.devicePixelRatio || 1;
     const r = el.parentElement.getBoundingClientRect();
     el.width  = r.width  * dpr;
     el.height = r.height * dpr;
     el.style.width  = r.width  + 'px';
     el.style.height = r.height + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx._dpr = dpr;
   }
   fit();
   window.addEventListener('resize', fit);
-  ctx._dpr = dpr; ctx._el = el;
+  if ('ResizeObserver' in window) new ResizeObserver(fit).observe(el.parentElement);
+  ctx._el = el;
   return ctx;
 }
 const W = ctx => ctx._el.width  / ctx._dpr;
@@ -508,16 +549,17 @@ function drawGraph(ctx, x, y, w, h, title, history, rightColor, leftColor, yMin,
 }
 
 // ─── MECHANICAL MECHANISMS ────────────────────────────────────────────────────
-function getCamOutput(phase, delay, majorAmp, minorAmp) {
-  const rpm = 60;  
-  const f = rpm / 60.0;  
-  const t = phase;  
-  const s = Math.sin(2 * Math.PI * f * (t - delay));
+const RIGHT_PHASE = 0;
+const LEFT_PHASE = 0.5;
+const phaseOf = (phase, offset = 0) => ((phase + offset) % 1 + 1) % 1;
+
+function getCamOutput(phase, phaseOffset, majorAmp, minorAmp) {
+  const s = Math.sin(2 * Math.PI * phaseOf(phase, phaseOffset));
   return s >= 0 ? majorAmp * s : minorAmp * (-s);
 }
 
-function getCrankOutput(phase, amplitude) {
-  const crankPhase = phase * Math.PI * 2;
+function getCrankOutput(phase, amplitude, phaseOffset = 0) {
+  const crankPhase = phaseOf(phase, phaseOffset) * Math.PI * 2;
   return amplitude * Math.cos(crankPhase);
 }
 
@@ -632,7 +674,7 @@ function drawCamMechanism(ctx, cx, cy, radius, phase, output, label) {
   ctx.translate(cx, cy);
 
   const R = radius * 1.6;  
-  const camPhase = (phase * Math.PI * 2) % (Math.PI * 2);
+  const camPhase = phaseOf(phase) * Math.PI * 2;
   
   ctx.beginPath();
   for (let a = 0; a < Math.PI * 2; a += 0.05) {
@@ -694,7 +736,7 @@ function drawCrankMechanism(ctx, cx, cy, radius, phase, output, label) {
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  const crankPhase = phase * Math.PI * 2;
+  const crankPhase = phaseOf(phase) * Math.PI * 2;
   const armLength = R * 0.5;  
   const pinX = armLength * Math.cos(crankPhase);
   const pinY = armLength * Math.sin(crankPhase);
@@ -890,20 +932,7 @@ function render1(ph) {
   const ctx=ctx1, w=W(ctx), h=H(ctx);
   bg(ctx);
 
-  const cx = w / 2;
-  const padding = 12;
-  const pelH = 60;
-  const cy = padding + pelH;
-  const legLength = Math.min(h * 0.28, 180);
-  const legBot = cy + legLength;
-  const wheelRadius = Math.min(24, Math.max(16, w * 0.065));
-  const wheelGap = 16;
-  const wheelDisplayY = legBot + wheelGap + wheelRadius;
-  const wheelOffset = Math.min(w * 0.28, cx - wheelRadius - 8);
-  const mechBot = wheelDisplayY + wheelRadius + 20;
-  const graphGap = 12;
-  const graphTop = mechBot + graphGap;
-  const graphH = h - graphTop - padding;
+  const cx=w/2, cy=h*0.32;
   const pelW=Math.min(w,h)*0.36;
 
   dref(ctx, 30,cy,w-30,cy);
@@ -911,8 +940,8 @@ function render1(ph) {
 
   const camMajorAmp = S.hike * 0.75;
   const camMinorAmp = S.hike * 0.2;
-  const rightHikeOutput = getCamOutput(ph, 0, camMajorAmp, camMinorAmp); 
-  const leftHikeOutput = getCamOutput(ph, 0.5, camMajorAmp, camMinorAmp); 
+  const rightHikeOutput = getCamOutput(ph, RIGHT_PHASE, camMajorAmp, camMinorAmp); 
+  const leftHikeOutput = getCamOutput(ph, LEFT_PHASE, camMajorAmp, camMinorAmp); 
 
   const rightHikeRad = rightHikeOutput * Math.PI / 180;
   const leftHikeRad = leftHikeOutput * Math.PI / 180;
@@ -923,8 +952,11 @@ function render1(ph) {
   };
   drawSacrumFrontal(ctx, cx, cy, pelW);
 
-  drawCamMechanism(ctx, cx - camSpacing, camDisplayY, camRadius, ph, rightHikeOutput, 'RIGHT');
-  drawCamMechanism(ctx, cx + camSpacing, camDisplayY, camRadius, (ph + 0.5) % 1, leftHikeOutput, 'LEFT');
+  const camDisplayY = h * 0.65;
+  const camOffset = Math.min(80, w * 0.24);
+  const camRadius = Math.min(30, Math.max(22, w * 0.075));
+  drawCamMechanism(ctx, cx - camOffset, camDisplayY, camRadius, phaseOf(ph, RIGHT_PHASE), rightHikeOutput, 'RIGHT');
+  drawCamMechanism(ctx, cx + camOffset, camDisplayY, camRadius, phaseOf(ph, LEFT_PHASE), leftHikeOutput, 'LEFT');
 
   for(let g=4;g>=1;g--){
     const gph = ph - g*0.04;
@@ -952,11 +984,9 @@ function render1(ph) {
   const avgHike = (rightHikeOutput + leftHikeOutput) / 2;
   const isRStance = rightHikeOutput > leftHikeOutput;
   ctx.fillStyle='#e8f04066'; ctx.font='bold 9px Barlow Condensed'; ctx.textAlign='center';
-  ctx.fillText(isRStance?'R HIKE':'L HIKE', cx, h-16); ctx.textAlign='left';
+  ctx.fillText(isRStance?'R HIKE':'L HIKE', cx, h * 0.735); ctx.textAlign='left';
 
-  if (graphH >= 30) {
-  drawGraph(ctx, 20, graphTop, w - 28, graphH, 'Hike', history.hike, '#ff6e50', '#38d9a9', -S.hike, S.hike);
-}
+  drawGraph(ctx, 20, h * 0.78, w - 28, h * 0.2, 'Hike', history.hike, '#ff6e50', '#38d9a9', -S.hike, S.hike);
 
   document.getElementById('r1').innerHTML =
     `<b>R HIKE</b> ${rightHikeOutput.toFixed(1)}°<br>` +
@@ -970,26 +1000,14 @@ function render2(ph) {
   const ctx=ctx2, w=W(ctx), h=H(ctx);
   bg(ctx);
 
-  const cx = w / 2;
-  const padding = 12;
-  const pelW = Math.min(w, h) * 0.35;
-  const cy = padding + pelW * 0.6;
-  const pelvisBot = cy + pelW * 0.5;
-  const crankRadius = Math.min(24, Math.max(16, w * 0.065));
-  const crankGap = 16;
-  const crankDisplayY = pelvisBot + crankGap + crankRadius;
-  const crankOffset = Math.min(w * 0.28, cx - crankRadius - 8);
-  const mechBot = crankDisplayY + crankRadius + 20;
-  const graphGap = 12;
-  const graphTop = mechBot + graphGap;
-  const graphH = h - graphTop - padding;
+  const cx=w*0.5, cy=h*0.32;
 
   dref(ctx, cx,20,cx,h*0.65);
   dref(ctx, 30,cy,w-30,cy);
 
   const crankAmp = S.tilt * 0.8;
-  const rightCrankOutput = getCrankOutput(ph, crankAmp);
-  const leftCrankOutput = -rightCrankOutput; 
+  const rightCrankOutput = getCrankOutput(ph, crankAmp, RIGHT_PHASE);
+  const leftCrankOutput = getCrankOutput(ph, crankAmp, LEFT_PHASE); 
 
   const rightTiltRad = rightCrankOutput * Math.PI / 180;
   const leftTiltRad = leftCrankOutput * Math.PI / 180;
@@ -999,8 +1017,11 @@ function render2(ph) {
   const pelW = Math.min(w,h)*0.35;
   const ac = drawPelvisTopDown(ctx, cx, cy, pelW, rightTiltRad, transRad);
 
-  drawCrankMechanism(ctx, cx - crankSpacing, crankDisplayY, crankRadius, ph, rightCrankOutput, 'RIGHT');
-  drawCrankMechanism(ctx, cx + crankSpacing, crankDisplayY, crankRadius, (ph + 0.5) % 1, leftCrankOutput, 'LEFT');
+  const crankDisplayY = h * 0.7;
+  const crankOffset = Math.min(80, w * 0.24);
+  const crankRadius = Math.min(25, Math.max(18, w * 0.065));
+  drawCrankMechanism(ctx, cx - crankOffset, crankDisplayY, crankRadius, phaseOf(ph, RIGHT_PHASE), rightCrankOutput, 'RIGHT');
+  drawCrankMechanism(ctx, cx + crankOffset, crankDisplayY, crankRadius, phaseOf(ph, LEFT_PHASE), leftCrankOutput, 'LEFT');
 
   for(let g=4;g>=1;g--){
     const gph = ph - g*0.04;
@@ -1025,9 +1046,8 @@ function render2(ph) {
   const rTilt = (rightTiltRad*180/Math.PI).toFixed(1);
   const lTilt = (leftTiltRad*180/Math.PI).toFixed(1);
 
-  if (graphH >= 30) {
-  drawGraph(ctx, 20, graphTop, w - 28, graphH, 'Tilt', history.tilt, '#ff6e50', '#38d9a9', -S.tilt, S.tilt);
-}
+  drawGraph(ctx, 20, h * 0.78, w - 28, h * 0.2, 'Tilt', history.tilt, '#ff6e50', '#38d9a9', -S.tilt, S.tilt);
+
   document.getElementById('r2').innerHTML =
     `<b>R TILT</b> ${rTilt}° (${rightTiltRad>0?'Anterior':'Posterior'})<br>` +
     `<b>L TILT</b> ${lTilt}° (${leftTiltRad>0?'Anterior':'Posterior'})<br>` +
@@ -1040,19 +1060,7 @@ function render3(ph) {
   const ctx=ctx3, w=W(ctx), h=H(ctx);
   bg(ctx);
 
-  const cx = w / 2;
-  const padding = 12;
-  const pelW = Math.min(w, h) * 0.36;
-  const cy = padding + pelW * 0.6;
-  const pelvisBot = cy + pelW * 0.35;
-  const camRadius = Math.min(28, Math.max(18, w * 0.07));
-  const camGap = 16;
-  const camDisplayY = pelvisBot + camGap + camRadius;
-  const camOffset = Math.min(w * 0.28, cx - camRadius - 8);
-  const mechBot = camDisplayY + camRadius + 20;
-  const graphGap = 12;
-  const graphTop = mechBot + graphGap;
-  const graphH = h - graphTop - padding;
+  const cx=w*0.5, cy=h*0.28;
   dref(ctx, cx-60,cy, cx+60,cy);
   dref(ctx, cx,cy-15, cx,h*0.65);
 
@@ -1086,16 +1094,17 @@ function render3(ph) {
     ctx.strokeStyle=col; ctx.lineWidth=2; ctx.stroke();
   });
 
-
-  drawWheelMechanism(ctx, cx - wheelSpacing, wheelDisplayY, wheelRadius, ph, true, 'RIGHT');
-  drawWheelMechanism(ctx, cx + wheelSpacing, wheelDisplayY, wheelRadius, ph, false, 'LEFT');
+  const wheelDisplayY = h * 0.72;
+  const wheelOffset = Math.min(80, w * 0.24);
+  const wheelRadius = Math.min(25, Math.max(18, w * 0.065));
+  drawWheelMechanism(ctx, cx - wheelOffset, wheelDisplayY, wheelRadius, ph, true, 'RIGHT');
+  drawWheelMechanism(ctx, cx + wheelOffset, wheelDisplayY, wheelRadius, ph, false, 'LEFT');
 
   const rSwingDeg = getWheelRotation(ph, S.swing, true);
-  const lSwingDeg = -rSwingDeg;
+  const lSwingDeg = getWheelRotation(ph, S.swing, false);
 
-if (graphH >= 30) {
-  drawGraph(ctx, 20, graphTop, w - 28, graphH, 'Swing', history.swing, '#ff6e50', '#38d9a9', -S.swing, S.swing);
-}
+  drawGraph(ctx, 20, h * 0.78, w - 28, h * 0.2, 'Swing', history.swing, '#ff6e50', '#38d9a9', -S.swing, S.swing);
+
   document.getElementById('r3').innerHTML =
     `<b>R SWING</b> ${rSwingDeg>=0?'+':''}${rSwingDeg.toFixed(1)}°<br>` +
     `<b>L SWING</b> ${lSwingDeg>=0?'+':''}${lSwingDeg.toFixed(1)}°<br>` +
@@ -1106,15 +1115,15 @@ if (graphH >= 30) {
 function updateHistory(ph) {
   const camMajorAmp = S.hike * 0.75;
   const camMinorAmp = S.hike * 0.2;
-  const rightHikeOutput = getCamOutput(ph, 0, camMajorAmp, camMinorAmp);
-  const leftHikeOutput = getCamOutput(ph, 0.5, camMajorAmp, camMinorAmp);
+  const rightHikeOutput = getCamOutput(ph, RIGHT_PHASE, camMajorAmp, camMinorAmp);
+  const leftHikeOutput = getCamOutput(ph, LEFT_PHASE, camMajorAmp, camMinorAmp);
 
   const crankAmp = S.tilt * 0.8;
-  const rightCrankOutput = getCrankOutput(ph, crankAmp);
-  const leftCrankOutput = -rightCrankOutput;
+  const rightCrankOutput = getCrankOutput(ph, crankAmp, RIGHT_PHASE);
+  const leftCrankOutput = getCrankOutput(ph, crankAmp, LEFT_PHASE);
 
   const rSwingDeg = getWheelRotation(ph, S.swing, true);
-  const lSwingDeg = -rSwingDeg;
+  const lSwingDeg = getWheelRotation(ph, S.swing, false);
 
   history.hike.right.push(rightHikeOutput);
   history.hike.left.push(leftHikeOutput);
