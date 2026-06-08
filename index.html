@@ -411,8 +411,8 @@ function setMode(m) {
   document.getElementById('bRun').classList.toggle('on',  m==='run');
   const isRun = m === 'run';
   const presets = isRun
-    ? { rpm:160, hike:13, tilt:8, swing:46 }
-    : { rpm:90,  hike:7,  tilt:4, swing:35 };
+    ? { rpm:126, hike:13, tilt:8, swing:46 }
+    : { rpm:60,  hike:7,  tilt:4, swing:35 };
   Object.entries(presets).forEach(([k,v]) => {
     S[k] = v;
     const sl = document.getElementById('s'+k[0].toUpperCase()+k.slice(1));
