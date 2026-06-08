@@ -6,292 +6,60 @@
 <title>Pelvic Gait Simulator</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;600;700&display=swap');
-
 :root {
-  --bg:      #0b0d12;
-  --surface: #10131a;
-  --card:    #14182200;
-  --border:  #1e2535;
-  --accent:  #f0c040;
-  --right:   #ff6e50;
-  --left:    #38d9a9;
-  --bone:    #c8d8ee;
-  --bone2:   #8aaace;
-  --bonedark:#1e2d46;
-  --text:    #c8d8f0;
-  --muted:   #445068;
+  --bg:#0b0d12; --surface:#10131a; --border:#1e2535;
+  --accent:#f0c040; --right:#ff6e50; --left:#38d9a9;
+  --muted:#445068; --text:#c8d8f0;
 }
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { min-height: 100%; overflow: hidden; }
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'IBM Plex Mono', monospace;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  min-height: 100dvh;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',monospace;display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
+header{display:flex;align-items:center;gap:20px;padding:0 24px;height:46px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+header h1{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.15rem;letter-spacing:.22em;text-transform:uppercase;color:var(--accent)}
+.hdr-sep{width:1px;height:20px;background:var(--border)}
+.hdr-pill{font-size:.52rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);padding:3px 8px;border:1px solid var(--border);border-radius:3px}
+.live{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:.52rem;letter-spacing:.2em;color:var(--left)}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--left);animation:lp 1.4s ease-in-out infinite}
+@keyframes lp{0%,100%{opacity:1}50%{opacity:.3}}
+.body{display:flex;flex:1;min-height:0}
+.views{flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);min-width:0}
+.view{background:var(--bg);position:relative;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+canvas{display:block;width:100%;height:100%}
+.view-tag{position:absolute;top:10px;left:12px;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);opacity:.6;pointer-events:none}
+.view-sub{position:absolute;top:26px;left:12px;font-size:.46rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);pointer-events:none}
+.readout{position:absolute;top:46px;left:12px;font-size:.5rem;letter-spacing:.1em;color:var(--muted);line-height:1.8;pointer-events:none}
+.readout b{color:var(--accent);font-weight:400}
+.panel{width:220px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.psec{padding:14px 16px;border-bottom:1px solid var(--border)}
+.psec-title{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;opacity:.8}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.mbtn{padding:8px 4px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:.85rem;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .18s}
+.mbtn.on{border-color:var(--accent);color:var(--accent);background:rgba(240,192,64,.06)}
+.srow{margin-bottom:10px}.srow:last-child{margin-bottom:0}
+.shdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.sname{font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.sval{font-size:.58rem;font-weight:500;color:var(--accent)}
+input[type=range]{-webkit-appearance:none;width:100%;height:2px;background:var(--border);border-radius:1px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px rgba(240,192,64,.5);cursor:pointer;transition:transform .12s}
+input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.3)}
+.pbar-wrap{height:2px;background:var(--border);border-radius:1px;margin-top:10px;overflow:hidden}
+.pbar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--left));border-radius:1px}
+@media(max-width:820px){
+  html,body{overflow:auto}body{height:auto}
+  header{height:auto;min-height:46px;padding:max(8px,env(safe-area-inset-top)) 12px 8px;gap:8px 12px;flex-wrap:wrap}
+  header h1{flex-basis:100%;font-size:1rem;letter-spacing:.16em}.hdr-sep{display:none}.live{margin-left:0}
+  .body{display:block;min-height:auto}.views{display:grid;grid-template-columns:1fr;gap:1px}
+  .view{height:clamp(430px,62svh,520px);min-height:340px}
+  .panel{width:100%;border-left:0;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;overflow:visible}
+  .psec{min-width:0;padding:12px;border-right:1px solid var(--border)}.psec:first-child{grid-column:1/-1}
 }
-
-/* ── HEADER ── */
-header {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 0 24px;
-  height: 46px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  flex-shrink: 0;
+@media(max-width:430px){
+  .view{height:clamp(500px,64svh,560px);min-height:0}
+  .panel{grid-template-columns:1fr;padding-bottom:env(safe-area-inset-bottom)}.psec{border-right:0}
 }
-header h1 {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700;
-  font-size: 1.15rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-.hdr-sep { width: 1px; height: 20px; background: var(--border); }
-.hdr-pill {
-  font-size: 0.52rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--muted);
-  padding: 3px 8px;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-}
-.live { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 0.52rem; letter-spacing: 0.2em; color: var(--left); }
-.live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--left); animation: lp 1.4s ease-in-out infinite; }
-@keyframes lp { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-/* ── BODY ── */
-.body {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
-
-/* ── CANVASES ── */
-.views {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 1px;
-  background: var(--border);
-  min-width: 0;
-}
-.view {
-  background: var(--bg);
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
-}
-canvas { display: block; width: 100%; height: 100%; }
-
-.view-tag {
-  position: absolute;
-  top: 10px; left: 12px;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 600;
-  font-size: 0.75rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--accent);
-  opacity: 0.6;
-  pointer-events: none;
-}
-.view-sub {
-  position: absolute;
-  top: 26px; left: 12px;
-  font-size: 0.46rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--muted);
-  pointer-events: none;
-}
-.readout {
-  position: absolute;
-  top: 46px; left: 12px;
-  font-size: 0.5rem;
-  letter-spacing: 0.1em;
-  color: var(--muted);
-  line-height: 1.8;
-  pointer-events: none;
-}
-.readout b { color: var(--accent); font-weight: 400; }
-
-/* ── CONTROLS PANEL ── */
-.panel {
-  width: 220px;
-  flex-shrink: 0;
-  background: var(--surface);
-  border-left: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
-}
-
-.psec {
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border);
-}
-.psec-title {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 600;
-  font-size: 0.68rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 12px;
-  opacity: 0.8;
-}
-
-/* Mode buttons */
-.mode-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-}
-.mbtn {
-  padding: 8px 4px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: transparent;
-  color: var(--muted);
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 600;
-  font-size: 0.85rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all .18s;
-}
-.mbtn.on {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: rgba(240,192,64,.06);
-}
-
-/* Sliders */
-.srow { margin-bottom: 10px; }
-.srow:last-child { margin-bottom: 0; }
-.shdr {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 4px;
-}
-.sname { font-size: 0.52rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
-.sval  { font-size: 0.58rem; font-weight: 500; color: var(--accent); }
-
-input[type=range] {
-  -webkit-appearance: none;
-  width: 100%; height: 2px;
-  background: var(--border);
-  border-radius: 1px;
-  outline: none;
-  cursor: pointer;
-}
-input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 13px; height: 13px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 6px rgba(240,192,64,.5);
-  cursor: pointer;
-  transition: transform .12s;
-}
-input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.3); }
-
-/* Phase bar */
-.pbar-wrap { height: 2px; background: var(--border); border-radius: 1px; margin-top: 10px; overflow: hidden; }
-.pbar { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--left)); border-radius: 1px; }
-
-@media (max-width: 820px) {
-  html, body { overflow: auto; }
-
-  body { height: auto; }
-
-  header {
-    height: auto;
-    min-height: 46px;
-    padding: max(8px, env(safe-area-inset-top)) 12px 8px;
-    gap: 8px 12px;
-    flex-wrap: wrap;
-  }
-
-  header h1 {
-    flex-basis: 100%;
-    font-size: 1rem;
-    letter-spacing: 0.16em;
-  }
-
-  .hdr-sep { display: none; }
-  .hdr-pill { font-size: 0.48rem; }
-  .live { margin-left: 0; }
-
-  .body {
-    display: block;
-    min-height: auto;
-  }
-
-  .views {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1px;
-  }
-
-  .view {
-    height: clamp(430px, 62svh, 520px);
-    min-height: 340px;
-  }
-
-  .panel {
-    width: 100%;
-    border-left: 0;
-    border-top: 1px solid var(--border);
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    overflow: visible;
-  }
-
-  .psec {
-    min-width: 0;
-    padding: 12px;
-    border-right: 1px solid var(--border);
-  }
-
-  .psec:first-child { grid-column: 1 / -1; }
-  .psec-title { font-size: 0.62rem; }
-  .readout { font-size: 0.48rem; }
-}
-
-@media (max-width: 430px) {
-  .view {
-    height: clamp(500px, 64svh, 560px);
-    min-height: 0;
-  }
-
-  .panel {
-    grid-template-columns: 1fr;
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  .psec { border-right: 0; }
-}
-
 </style>
 </head>
 <body>
-
 <header>
   <h1>Pelvic Gait Simulator</h1>
   <div class="hdr-sep"></div>
@@ -299,40 +67,36 @@ input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.3); }
   <span class="hdr-pill">Frontal · Transverse · Sagittal</span>
   <div class="live"><span class="live-dot"></span>LIVE</div>
 </header>
-
 <div class="body">
-
   <div class="views">
-        <div class="view">
-          <span class="view-tag">Pelvic Hike</span>
-          <span class="view-sub">Frontal / Coronal Plane</span>
-          <canvas id="c1"></canvas>
-          <div class="readout" id="r1"></div>
-        </div>
-        <div class="view">
-          <span class="view-tag">Pelvic Tilt</span>
-          <span class="view-sub">Transverse / Superior Plane</span>
-          <canvas id="c2"></canvas>
-          <div class="readout" id="r2"></div>
-        </div>
-        <div class="view">
-          <span class="view-tag">Thigh Swing</span>
-          <span class="view-sub">Bilateral · Sagittal Plane</span>
-          <canvas id="c3"></canvas>
-          <div class="readout" id="r3"></div>
-        </div>
+    <div class="view">
+      <span class="view-tag">Pelvic Hike</span>
+      <span class="view-sub">Frontal / Coronal Plane</span>
+      <canvas id="c1"></canvas>
+      <div class="readout" id="r1"></div>
+    </div>
+    <div class="view">
+      <span class="view-tag">Pelvic Tilt</span>
+      <span class="view-sub">Transverse / Superior Plane</span>
+      <canvas id="c2"></canvas>
+      <div class="readout" id="r2"></div>
+    </div>
+    <div class="view">
+      <span class="view-tag">Thigh Swing</span>
+      <span class="view-sub">Bilateral · Sagittal Plane</span>
+      <canvas id="c3"></canvas>
+      <div class="readout" id="r3"></div>
+    </div>
   </div>
-
   <div class="panel">
     <div class="psec">
       <div class="psec-title">Gait Mode</div>
       <div class="mode-grid">
         <button class="mbtn on" id="bWalk">Walk</button>
-        <button class="mbtn"    id="bRun">Run</button>
+        <button class="mbtn" id="bRun">Run</button>
       </div>
       <div class="pbar-wrap"><div class="pbar" id="pbar"></div></div>
     </div>
-
     <div class="psec">
       <div class="psec-title">Cadence</div>
       <div class="srow">
@@ -340,27 +104,28 @@ input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.3); }
         <input type="range" id="sRpm" min="20" max="200" value="60" step="1">
       </div>
     </div>
-
     <div class="psec">
       <div class="psec-title">Pelvic Hike</div>
       <div class="srow">
-        <div class="shdr"><span class="sname">Hike Amplitude (°)</span><span class="sval" id="vHike">7</span></div>
-        <input type="range" id="sHike" min="0" max="25" value="7" step="0.5">
+        <div class="shdr"><span class="sname">Major Amp (mm)</span><span class="sval" id="vMajor">15</span></div>
+        <input type="range" id="sMajor" min="0" max="30" value="15" step="0.5">
+      </div>
+      <div class="srow">
+        <div class="shdr"><span class="sname">Minor Amp (mm)</span><span class="sval" id="vMinor">4</span></div>
+        <input type="range" id="sMinor" min="0" max="15" value="4" step="0.5">
       </div>
     </div>
-
     <div class="psec">
       <div class="psec-title">Pelvic Tilt</div>
       <div class="srow">
-        <div class="shdr"><span class="sname">Tilt Amplitude (°)</span><span class="sval" id="vTilt">4</span></div>
+        <div class="shdr"><span class="sname">Tilt Amplitude (°)</span><span class="sval" id="vTilt">4°</span></div>
         <input type="range" id="sTilt" min="0" max="20" value="4" step="0.5">
       </div>
     </div>
-
     <div class="psec">
       <div class="psec-title">Leg Swing</div>
       <div class="srow">
-        <div class="shdr"><span class="sname">Swing Amplitude (°)</span><span class="sval" id="vSwing">35</span></div>
+        <div class="shdr"><span class="sname">Swing Amplitude (°)</span><span class="sval" id="vSwing">35°</span></div>
         <input type="range" id="sSwing" min="0" max="65" value="35" step="0.5">
       </div>
     </div>
@@ -369,455 +134,417 @@ input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.3); }
 
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
-const S = { rpm: 60, hike: 7, tilt: 4, swing: 35 };
-let mode = 'walk';
-let phase = 0, lastTS = null;
+const S = { rpm: 60, major: 15, minor: 4, tilt: 4, swing: 35 };
+let mode = 'walk', phase = 0, lastTS = null;
 
-// History buffers for graphing (store last 120 samples = 1 cycle at 60 RPM)
-const historyBuffer = 120;
+// Phase offsets exactly matching Python:
+//   dr_exp = 0.25 * (60/rpm)  → normalised = 0.25
+//   dl_exp = 0.75 * (60/rpm)  → normalised = 0.75
+const RIGHT_CAM_OFFSET = 0.25;
+const LEFT_CAM_OFFSET  = 0.75;
+
+// History buffers
+const HIST_N = 120;
 const history = {
-  hike: { right: [], left: [] },
-  tilt: { right: [], left: [] },
-  swing: { right: [], left: [] }
+  hike:  { right: new Array(HIST_N).fill(0), left: new Array(HIST_N).fill(0) },
+  tilt:  { right: new Array(HIST_N).fill(0), left: new Array(HIST_N).fill(0) },
+  swing: { right: new Array(HIST_N).fill(0), left: new Array(HIST_N).fill(0) }
 };
-
-// Initialize history buffers
-for (let i = 0; i < historyBuffer; i++) {
-  history.hike.right.push(0);
-  history.hike.left.push(0);
-  history.tilt.right.push(0);
-  history.tilt.left.push(0);
-  history.swing.right.push(0);
-  history.swing.left.push(0);
-}
 
 // ─── SLIDERS ──────────────────────────────────────────────────────────────────
 function bindSlider(sid, vid, key, fmt) {
-  const sl = document.getElementById(sid);
-  const vl = document.getElementById(vid);
+  const sl = document.getElementById(sid), vl = document.getElementById(vid);
   sl.addEventListener('input', () => { S[key] = +sl.value; vl.textContent = fmt(S[key]); });
 }
 bindSlider('sRpm',   'vRpm',   'rpm',   v => v);
-bindSlider('sHike',  'vHike',  'hike',  v => v + '°');
+bindSlider('sMajor', 'vMajor', 'major', v => v);
+bindSlider('sMinor', 'vMinor', 'minor', v => v);
 bindSlider('sTilt',  'vTilt',  'tilt',  v => v + '°');
 bindSlider('sSwing', 'vSwing', 'swing', v => v + '°');
 
 document.getElementById('bWalk').addEventListener('click', () => setMode('walk'));
 document.getElementById('bRun').addEventListener('click',  () => setMode('run'));
 
-function setMode(m) {
-  mode = m;
-  document.getElementById('bWalk').classList.toggle('on', m==='walk');
-  document.getElementById('bRun').classList.toggle('on',  m==='run');
-  const isRun = m === 'run';
-  const presets = isRun
-    ? { rpm:126, hike:13, tilt:8, swing:46 }
-    : { rpm:60,  hike:7,  tilt:4, swing:35 };
-  Object.entries(presets).forEach(([k,v]) => {
-    S[k] = v;
-    const sl = document.getElementById('s'+k[0].toUpperCase()+k.slice(1));
-    if(sl) sl.value = v;
-    const vl = document.getElementById('v'+k[0].toUpperCase()+k.slice(1));
-    const fmts = { rpm: v=>v, hike: v=>v+'°', tilt: v=>v+'°', swing: v=>v+'°' };
-    if(vl) vl.textContent = fmts[k](v);
-  });
+function setUIVal(key, val, fmt) {
+  S[key] = val;
+  const sid = 's' + key[0].toUpperCase() + key.slice(1);
+  const vid = 'v' + key[0].toUpperCase() + key.slice(1);
+  const sl = document.getElementById(sid);
+  const vl = document.getElementById(vid);
+  if (sl) sl.value = val;
+  if (vl) vl.textContent = fmt(val);
 }
 
-// ─── CANVAS SETUP ─────────────────────────────────────────────────────────────
+function setMode(m) {
+  mode = m;
+  document.getElementById('bWalk').classList.toggle('on', m === 'walk');
+  document.getElementById('bRun').classList.toggle('on',  m === 'run');
+  if (m === 'run') {
+    setUIVal('rpm',   126, v => v);
+    setUIVal('major', 26,  v => v);
+    setUIVal('minor', 7,   v => v);
+    setUIVal('tilt',  8,   v => v + '°');
+    setUIVal('swing', 46,  v => v + '°');
+  } else {
+    setUIVal('rpm',   60,  v => v);
+    setUIVal('major', 15,  v => v);
+    setUIVal('minor', 4,   v => v);
+    setUIVal('tilt',  4,   v => v + '°');
+    setUIVal('swing', 35,  v => v + '°');
+  }
+}
+
+// ─── CANVAS ───────────────────────────────────────────────────────────────────
 function makeCanvas(id) {
-  const el = document.getElementById(id);
-  const ctx = el.getContext('2d');
+  const el = document.getElementById(id), ctx = el.getContext('2d');
   function fit() {
-    const dpr = window.devicePixelRatio || 1;
-    const r = el.parentElement.getBoundingClientRect();
-    el.width  = r.width  * dpr;
-    el.height = r.height * dpr;
-    el.style.width  = r.width  + 'px';
-    el.style.height = r.height + 'px';
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx._dpr = dpr;
+    const dpr = window.devicePixelRatio || 1, r = el.parentElement.getBoundingClientRect();
+    el.width  = r.width  * dpr; el.height = r.height * dpr;
+    el.style.width  = r.width  + 'px'; el.style.height = r.height + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx._dpr = dpr;
   }
   fit();
   window.addEventListener('resize', fit);
   if ('ResizeObserver' in window) new ResizeObserver(fit).observe(el.parentElement);
-  ctx._el = el;
-  return ctx;
+  ctx._el = el; return ctx;
 }
-const W = ctx => ctx._el.width  / ctx._dpr;
-const H = ctx => ctx._el.height / ctx._dpr;
-
-const ctx1 = makeCanvas('c1');
-const ctx2 = makeCanvas('c2');
-const ctx3 = makeCanvas('c3');
+const W = c => c._el.width / c._dpr;
+const H = c => c._el.height / c._dpr;
+const ctx1 = makeCanvas('c1'), ctx2 = makeCanvas('c2'), ctx3 = makeCanvas('c3');
 
 // ─── UTIL ─────────────────────────────────────────────────────────────────────
 function bg(ctx) {
-  const w=W(ctx), h=H(ctx);
-  ctx.fillStyle = '#0b0d12';
-  ctx.fillRect(0,0,w,h);
-  ctx.strokeStyle = 'rgba(240,192,64,0.025)';
-  ctx.lineWidth = 0.5;
-  for(let x=0;x<w;x+=36){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
-  for(let y=0;y<h;y+=36){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+  const w = W(ctx), h = H(ctx);
+  ctx.fillStyle = '#0b0d12'; ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = 'rgba(240,192,64,0.025)'; ctx.lineWidth = 0.5;
+  for (let x = 0; x < w; x += 36) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+  for (let y = 0; y < h; y += 36) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
 }
-function glow(ctx,col,blur){ ctx.shadowColor=col; ctx.shadowBlur=blur; }
-function noglow(ctx){ ctx.shadowColor='transparent'; ctx.shadowBlur=0; }
-function hexToRgb(h){ return { r:parseInt(h.slice(1,3),16), g:parseInt(h.slice(3,5),16), b:parseInt(h.slice(5,7),16) }; }
-
-function dref(ctx, x1,y1,x2,y2) {
-  ctx.save();
-  ctx.strokeStyle='rgba(255,255,255,0.04)';
-  ctx.lineWidth=1; ctx.setLineDash([4,8]);
-  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
-  ctx.setLineDash([]); ctx.restore();
+function glow(ctx, col, blur) { ctx.shadowColor = col; ctx.shadowBlur = blur; }
+function noglow(ctx) { ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; }
+function hexToRgb(h) { return { r: parseInt(h.slice(1,3),16), g: parseInt(h.slice(3,5),16), b: parseInt(h.slice(5,7),16) }; }
+function dref(ctx, x1, y1, x2, y2) {
+  ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 1; ctx.setLineDash([4,8]);
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
 }
+const normPhase = (p, off = 0) => ((p + off) % 1 + 1) % 1;
 
-// ─── GRAPHING ─────────────────────────────────────────────────────────────────
-function drawGraph(ctx, x, y, w, h, title, history, rightColor, leftColor, yMin, yMax) {
-  ctx.save();
-  ctx.translate(x, y);
-
-  // Background
-  ctx.fillStyle = 'rgba(20,30,48,0.8)';
-  ctx.fillRect(0, 0, w, h);
-  ctx.strokeStyle = '#4a6888';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(0, 0, w, h);
-
-  // Title
-  ctx.fillStyle = '#38d9a9';
-  ctx.font = '11px Barlow Condensed';
-  ctx.textAlign = 'left';
-  ctx.fillText(title, 8, 16);
-
-  // Y-axis scale text
-  ctx.fillStyle = '#445068';
-  ctx.font = '8px IBM Plex Mono';
-  ctx.textAlign = 'right';
-  ctx.fillText(yMax.toFixed(0) + '°', -4, 14);
-  ctx.fillText('0°', -4, h / 2 + 4);
-  ctx.fillText(yMin.toFixed(0) + '°', -4, h - 4);
-
-  // Graph area
-  const graphX = 28;
-  const graphY = 22;
-  const graphW = w - graphX - 4;
-  const graphH = h - graphY - 4;
-
-  // Grid lines
-  ctx.strokeStyle = 'rgba(74,104,136,0.2)';
-  ctx.lineWidth = 0.5;
-  for (let i = 0; i <= 4; i++) {
-    const gy = graphY + (graphH * i / 4);
-    ctx.beginPath();
-    ctx.moveTo(graphX, gy);
-    ctx.lineTo(graphX + graphW, gy);
-    ctx.stroke();
-  }
-
-  // Draw right leg (red)
-  if (history.right && history.right.length > 1) {
-    ctx.strokeStyle = rightColor;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    for (let i = 0; i < history.right.length; i++) {
-      const px = graphX + (i / (history.right.length - 1)) * graphW;
-      const val = history.right[i];
-      const py = graphY + graphH * (1 - (val - yMin) / (yMax - yMin));
-      if (i === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
-    }
-    ctx.stroke();
-  }
-
-  // Draw left leg (green)
-  if (history.left && history.left.length > 1) {
-    ctx.strokeStyle = leftColor;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    for (let i = 0; i < history.left.length; i++) {
-      const px = graphX + (i / (history.left.length - 1)) * graphW;
-      const val = history.left[i];
-      const py = graphY + graphH * (1 - (val - yMin) / (yMax - yMin));
-      if (i === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
-    }
-    ctx.stroke();
-  }
-
-  ctx.restore();
+// ─── CAM OUTPUT — exact Python formula ───────────────────────────────────────
+// Python: s = sin(2π * f * (t - delay))
+//         out = s >= 0 ? major * s : minor * (-s)
+// In normalised phase with offset:
+//   localPhase = normPhase(phase, offset)
+//   s = sin(2π * localPhase)
+//   out = s >= 0 ? major * s : minor * (-s)
+//
+// Phase offsets: RIGHT = 0.25, LEFT = 0.75
+// At phase=0: RIGHT s=sin(π/2)=1  → output = major (peak)
+//             LEFT  s=sin(3π/2)=-1 → output = minor (minor peak)
+function getCamOutput(ph, offset, major, minor) {
+  const localPhase = normPhase(ph, offset);
+  const s = Math.sin(2 * Math.PI * localPhase);
+  return s >= 0 ? major * s : minor * (-s);
 }
 
-// ─── MECHANICAL MECHANISMS ────────────────────────────────────────────────────
-const RIGHT_PHASE = 0;
-const LEFT_PHASE = 0.5;
-const phaseOf = (phase, offset = 0) => ((phase + offset) % 1 + 1) % 1;
-
-function getCamOutput(phase, phaseOffset, majorAmp, minorAmp) {
-  const s = Math.sin(2 * Math.PI * phaseOf(phase, phaseOffset));
-  return s >= 0 ? majorAmp * s : minorAmp * (-s);
+// ─── CAM BODY SHAPE — derived from formula ────────────────────────────────────
+// Follower at top (angle = -π/2 in world). As cam rotates by camAngle = 2π*phase,
+// relative angle of follower on cam: relA = -π/2 - camAngle
+// getCamOutput uses offset=0.25 → localPhase = phase+0.25
+// s = sin(2π*(phase+0.25)) = cos(2π*phase) = cos(camAngle)
+// So s (as seen by follower) = cos(camAngle)
+// And camAngle = -relA - π/2, so s = cos(-relA - π/2) = -sin(relA)... wait:
+// Let me use the direct relation: we want r(relA) such that
+// when follower is at relA on the cam, output = r(relA) - baseR
+// s = -cos(relA) (derived from camAngle = -π/2 - relA, sin(camAngle)=sin(-π/2-relA)=-cos(relA))
+// Hmm... let's verify numerically: when cam=0, relA=-π/2
+// s should be 1 (major peak). -cos(-π/2) = 0. That's wrong.
+// 
+// Let me re-derive properly:
+// For RIGHT (offset=0.25):
+//   s = sin(2π*(phase + 0.25)) = sin(2π*phase + π/2) = cos(2π*phase)
+//   camAngle = 2π*phase, so s = cos(camAngle)
+//   relA of follower = topAngle - camAngle = -π/2 - camAngle
+//   camAngle = -π/2 - relA
+//   s = cos(-π/2 - relA) = cos(π/2 + relA) = -sin(relA)   ← Hmm still 0 at -π/2
+//   Wait: relA at cam=0 is -π/2. -sin(-π/2) = -(-1) = 1 ✓
+//   At cam=π/2, relA=-π/2-π/2=-π. -sin(-π)=0. s=cos(π/2)=0 ✓
+//   At cam=π,   relA=-3π/2. -sin(-3π/2)=-1. s=cos(π)=-1 ✓
+// So: s = -sin(relA) for the RIGHT cam
+// r(relA) = baseR + (-sin(relA)>=0 ? major*(-sin(relA)) : minor*(sin(relA)))
+//         = baseR + (sin(relA)<=0 ? major*(-sin(relA)) : minor*sin(relA))
+//         = baseR + major*max(0,-sin(relA)) + minor*max(0,sin(relA))
+function camRadius(relA, baseR, major, minor) {
+  const sinRelA = Math.sin(relA);
+  return baseR + major * Math.max(0, -sinRelA) + minor * Math.max(0, sinRelA);
 }
 
-function getCrankOutput(phase, amplitude, phaseOffset = 0) {
-  const crankPhase = phaseOf(phase, phaseOffset) * Math.PI * 2;
-  return amplitude * Math.cos(crankPhase);
-}
-
-function getWheelRotation(phase, amplitude, isRight) {
-  const wheelPhase = isRight ? phase : (phase + 0.5) % 1;
-  const wheelRad = wheelPhase * Math.PI * 2;
-  return amplitude * Math.sin(wheelRad);
-}
-
-// ─── 3D BIOMECHANICS ENGINE ───────────────────────────────────────────────────
-function getLeg3D(ph, isRight) {
-  const p = ((isRight ? ph : ph + 0.5) % 1 + 1) % 1;
-  const swingDeg = getWheelRotation(ph, S.swing, isRight);
-  const swingRad = swingDeg * Math.PI / 180;
-
-  let kneeRad = 0;
-  const swingPhase = p >= 0.5 ? (p - 0.5) * 2 : p * 2;
-  if (p >= 0.5) {
-    const maxKnee = mode === 'run' ? 90 : 50;
-    kneeRad = (maxKnee * Math.sin(Math.PI * swingPhase)) * Math.PI / 180;
-  } else {
-    kneeRad = (15 * Math.sin(Math.PI * swingPhase)) * Math.PI / 180;
-  }
-
-  const L_Thigh = 80;
-  const L_Calf = 85;
-  const L_Foot = 25;
-
-  const kx = 0;
-  const ky = L_Thigh * Math.cos(swingRad);
-  const kz = L_Thigh * Math.sin(swingRad);
-
-  const lowerAngle = swingRad - kneeRad;
-  const ax = kx;
-  const ay = ky + L_Calf * Math.cos(lowerAngle);
-  const az = kz + L_Calf * Math.sin(lowerAngle);
-
-  const footAngle = lowerAngle + Math.PI/2 - 0.2;
-  const tx = ax;
-  const ty = ay + L_Foot * Math.cos(footAngle);
-  const tz = az + L_Foot * Math.sin(footAngle);
-
+// ─── BIOMECHANICS ─────────────────────────────────────────────────────────────
+function getHike(ph) {
   return {
-    hip: { x:0, y:0, z:0 },
-    knee: { x:kx, y:ky, z:kz },
-    ankle: { x:ax, y:ay, z:az },
-    toe: { x:tx, y:ty, z:tz }
+    right: getCamOutput(ph, RIGHT_CAM_OFFSET, S.major, S.minor),
+    left:  getCamOutput(ph, LEFT_CAM_OFFSET,  S.major, S.minor)
   };
 }
 
-function drawHumanLeg(ctx, hx, hy, leg3D, view, col, alpha=1) {
-  ctx.save();
-  ctx.globalAlpha = alpha;
-
-  const pts = [leg3D.hip, leg3D.knee, leg3D.ankle, leg3D.toe];
-  let p2d;
-
-  if (view === 'front') {
-    p2d = pts.map(p => ({ x: hx + p.x, y: hy + p.y, z: p.z }));
-  } else if (view === 'top') {
-    p2d = pts.map(p => ({ x: hx + p.x, y: hy - p.z, z: -p.y }));
-  } else if (view === 'side') {
-    p2d = pts.map(p => ({ x: hx + p.z, y: hy + p.y, z: p.x }));
-  }
-
-  const [H, K, A, T] = p2d;
-
-  function getW(baseW, z) {
-    const scale = Math.max(0.3, 1 + (z / 220)); 
-    return baseW * scale;
-  }
-
-  const hw = getW(18, H.z);
-  const kw = getW(12, K.z);
-  const aw = getW(7, A.z);
-  const tw = getW(6, T.z);
-
-  function drawSeg(p1, p2, w1, w2, color) {
-    const dx = p2.x - p1.x, dy = p2.y - p1.y;
-    const len = Math.hypot(dx, dy);
-    if(len < 0.1) return;
-    const nx = -dy / len, ny = dx / len;
-
-    ctx.beginPath();
-    ctx.moveTo(p1.x + nx * w1, p1.y + ny * w1);
-    ctx.lineTo(p2.x + nx * w2, p2.y + ny * w2);
-    ctx.arc(p2.x, p2.y, w2, Math.atan2(dy, dx) - Math.PI/2, Math.atan2(dy, dx) + Math.PI/2);
-    ctx.lineTo(p1.x - nx * w1, p1.y - ny * w1);
-    ctx.arc(p1.x, p1.y, w1, Math.atan2(-dy, -dx) - Math.PI/2, Math.atan2(-dy, -dx) + Math.PI/2);
-    ctx.closePath();
-
-    const g = ctx.createLinearGradient(p1.x + nx*w1, p1.y + ny*w1, p1.x - nx*w1, p1.y - ny*w1);
-    const c = hexToRgb(color);
-    g.addColorStop(0, `rgba(${c.r},${c.g},${c.b},0.2)`);
-    g.addColorStop(0.4, `rgba(${c.r},${c.g},${c.b},0.8)`);
-    g.addColorStop(1, `rgba(${c.r},${c.g},${c.b},0.15)`);
-
-    ctx.fillStyle = g; ctx.fill();
-    ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.stroke();
-  }
-
-  drawSeg(H, K, hw, kw, col); 
-  drawSeg(K, A, kw, aw, col); 
-  drawSeg(A, T, aw, tw, col); 
-
-  ctx.restore();
+function getTilt(ph, amp) {
+  const c = Math.cos(2 * Math.PI * ph);
+  return { right: amp * c, left: -amp * c };
 }
 
-// ─── MECHANISM VISUALIZATION ──────────────────────────────────────────────────
-function drawCamMechanism(ctx, cx, cy, radius, phase, output, label) {
-  ctx.save();
-  ctx.translate(cx, cy);
+function getSwing(ph, amp) {
+  const c = Math.cos(2 * Math.PI * ph);
+  return { right: -amp * c, left: amp * c };
+}
 
-  const R = radius * 1.6;  
-  const camPhase = phaseOf(phase) * Math.PI * 2;
-  
-  ctx.beginPath();
-  for (let a = 0; a < Math.PI * 2; a += 0.05) {
-    const majorLobe = Math.max(0, Math.cos(a - camPhase));
-    const minorLobe = 0.25 * Math.sin(2 * (a - camPhase));
-    const r = R * (0.5 + 0.35 * majorLobe + 0.1 * minorLobe);
-    const x = r * Math.cos(a);
-    const y = r * Math.sin(a);
-    if (a === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+// ─── HISTORY ──────────────────────────────────────────────────────────────────
+function updateHistory(ph) {
+  const hike  = getHike(ph);
+  const tilt  = getTilt(ph, S.tilt);
+  const swing = getSwing(ph, S.swing);
+  history.hike.right.push(hike.right);   history.hike.left.push(hike.left);
+  history.tilt.right.push(tilt.right);   history.tilt.left.push(tilt.left);
+  history.swing.right.push(swing.right); history.swing.left.push(swing.left);
+  if (history.hike.right.length > HIST_N) {
+    ['hike','tilt','swing'].forEach(k => { history[k].right.shift(); history[k].left.shift(); });
   }
-  ctx.closePath();
-  
-  const camGrad = ctx.createRadialGradient(0, 0, R * 0.2, 0, 0, R);
-  camGrad.addColorStop(0, '#1a2840');
-  camGrad.addColorStop(1, '#0b121e');
-  ctx.fillStyle = camGrad;
-  ctx.fill();
-  ctx.strokeStyle = '#38d9a9';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
-  const topAngle = -Math.PI / 2; 
-  const majorLobe = Math.max(0, Math.cos(topAngle - camPhase));
-  const minorLobe = 0.25 * Math.sin(2 * (topAngle - camPhase));
-  const followerRadius = R * (0.5 + 0.35 * majorLobe + 0.1 * minorLobe);
-  const pinY = -followerRadius;  
-  
-  ctx.beginPath();
-  ctx.arc(0, pinY, 5, 0, Math.PI * 2);
-  ctx.fillStyle = label === 'RIGHT' ? '#ff6e50' : '#38d9a9';
-  ctx.fill();
-
-  ctx.fillStyle = '#445068';
-  ctx.font = '10px Barlow Condensed';
-  ctx.textAlign = 'center';
-  ctx.fillText(label, 0, R + 18);
-
-  ctx.restore();
 }
 
-function drawCrankMechanism(ctx, cx, cy, radius, phase, output, label) {
-  ctx.save();
-  ctx.translate(cx, cy);
-
-  const R = radius * 2.2;  
-
-  ctx.beginPath();
-  ctx.arc(0, 0, R, 0, Math.PI * 2);
-  ctx.strokeStyle = '#4a6888';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.arc(0, 0, R * 0.2, 0, Math.PI * 2);
-  ctx.fillStyle = '#141e30';
-  ctx.fill();
-  ctx.strokeStyle = '#4a6888';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  const crankPhase = phaseOf(phase) * Math.PI * 2;
-  const armLength = R * 0.5;  
-  const pinX = armLength * Math.cos(crankPhase);
-  const pinY = armLength * Math.sin(crankPhase);
-
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.lineTo(pinX, pinY);
-  ctx.strokeStyle = '#4a6890';
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.arc(pinX, pinY, 6, 0, Math.PI * 2);
-  ctx.fillStyle = label === 'RIGHT' ? '#ff6e50' : '#38d9a9';
-  ctx.fill();
-
-  const followerX = output * 0.4;
-  ctx.beginPath();
-  ctx.moveTo(pinX, pinY);
-  ctx.lineTo(followerX + 12, pinY);
-  ctx.strokeStyle = 'rgba(240,192,64,0.3)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  ctx.fillStyle = '#445068';
-  ctx.font = '10px Barlow Condensed';
-  ctx.textAlign = 'center';
-  ctx.fillText(label, 0, R + 18);
-
-  ctx.restore();
-}
-
-function drawWheelMechanism(ctx, cx, cy, radius, phase, isRight, label) {
-  ctx.save();
-  ctx.translate(cx, cy);
-
-  const wheelPhase = isRight ? phase : (phase + 0.5) % 1;
-  const wheelRad = wheelPhase * Math.PI * 2;
-
-  ctx.beginPath();
-  ctx.arc(0, 0, radius, 0, Math.PI * 2);
-  ctx.strokeStyle = '#4a6888';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  for (let i = 0; i < 4; i++) {
-    const a = (i / 4) * Math.PI * 2 + wheelRad;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(radius * Math.cos(a), radius * Math.sin(a));
-    ctx.strokeStyle = '#2a3e5a';
-    ctx.lineWidth = 1;
+// ─── GRAPH ────────────────────────────────────────────────────────────────────
+function drawGraph(ctx, x, y, w, h, title, hist, yMin, yMax) {
+  ctx.save(); ctx.translate(x, y);
+  ctx.fillStyle = 'rgba(20,30,48,0.8)'; ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = '#4a6888'; ctx.lineWidth = 1; ctx.strokeRect(0, 0, w, h);
+  ctx.fillStyle = '#f0c040'; ctx.font = '600 11px Barlow Condensed'; ctx.textAlign = 'left'; ctx.fillText(title, 8, 14);
+  ctx.font = '600 9px Barlow Condensed';
+  ctx.fillStyle = '#38d9a9'; ctx.textAlign = 'left';  ctx.fillText('LEFT',  8, 24);
+  ctx.fillStyle = '#ff6e50'; ctx.textAlign = 'right'; ctx.fillText('RIGHT', w - 4, 24);
+  ctx.fillStyle = '#445068'; ctx.font = '8px IBM Plex Mono'; ctx.textAlign = 'right';
+  ctx.fillText(yMax.toFixed(0), -4, 14);
+  ctx.fillText('0', -4, h / 2 + 4);
+  ctx.fillText(yMin.toFixed(0), -4, h - 4);
+  const gx = 24, gy = 28, gw = w - gx - 4, gh = h - gy - 4;
+  ctx.strokeStyle = 'rgba(74,104,136,0.2)'; ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 4; i++) {
+    const ly = gy + gh * i / 4;
+    ctx.beginPath(); ctx.moveTo(gx, ly); ctx.lineTo(gx + gw, ly); ctx.stroke();
+  }
+  const zeroY = gy + gh * (1 - (0 - yMin) / (yMax - yMin));
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(gx, zeroY); ctx.lineTo(gx + gw, zeroY); ctx.stroke();
+  function drawLine(data, color) {
+    if (!data || data.length < 2) return;
+    ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.beginPath();
+    for (let i = 0; i < data.length; i++) {
+      const px = gx + (i / (data.length - 1)) * gw;
+      const py = gy + gh * (1 - (data[i] - yMin) / (yMax - yMin));
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
     ctx.stroke();
   }
+  drawLine(hist.left, '#38d9a9');
+  drawLine(hist.right, '#ff6e50');
+  ctx.restore();
+}
 
-  const pinX = radius * Math.cos(wheelRad);
-  const pinY = radius * Math.sin(wheelRad);
+// ─── 3D LEG ───────────────────────────────────────────────────────────────────
+function getLeg3D(ph, isRight) {
+  const p = normPhase(isRight ? ph : ph + 0.5);
+  const swingDeg = isRight ? getSwing(ph, S.swing).right : getSwing(ph, S.swing).left;
+  const swingRad = swingDeg * Math.PI / 180;
+  let kneeRad = 0;
+  const sp = p >= 0.5 ? (p - 0.5) * 2 : p * 2;
+  if (p >= 0.5) kneeRad = (mode === 'run' ? 90 : 50) * Math.sin(Math.PI * sp) * Math.PI / 180;
+  else          kneeRad = 15 * Math.sin(Math.PI * sp) * Math.PI / 180;
+  const L_Thigh = 80, L_Calf = 85, L_Foot = 25;
+  const ky = L_Thigh * Math.cos(swingRad), kz = L_Thigh * Math.sin(swingRad);
+  const la = swingRad - kneeRad;
+  const ay = ky + L_Calf * Math.cos(la), az = kz + L_Calf * Math.sin(la);
+  const fa = la + Math.PI / 2 - 0.2;
+  const ty = ay + L_Foot * Math.cos(fa), tz = az + L_Foot * Math.sin(fa);
+  return { hip:{x:0,y:0,z:0}, knee:{x:0,y:ky,z:kz}, ankle:{x:0,y:ay,z:az}, toe:{x:0,y:ty,z:tz} };
+}
+
+function drawHumanLeg(ctx, hx, hy, leg3D, view, col, alpha = 1) {
+  ctx.save(); ctx.globalAlpha = alpha;
+  const pts = [leg3D.hip, leg3D.knee, leg3D.ankle, leg3D.toe];
+  let p2d;
+  if      (view === 'front') p2d = pts.map(p => ({x: hx + p.x, y: hy + p.y, z: p.z}));
+  else if (view === 'top')   p2d = pts.map(p => ({x: hx + p.x, y: hy - p.z, z: -p.y}));
+  else if (view === 'side')  p2d = pts.map(p => ({x: hx + p.z, y: hy + p.y, z: p.x}));
+  const [Hp, K, A, T] = p2d;
+  function getW(bw, z) { return bw * Math.max(0.3, 1 + z / 220); }
+  function drawSeg(p1, p2, w1, w2, color) {
+    const dx = p2.x - p1.x, dy = p2.y - p1.y, len = Math.hypot(dx, dy);
+    if (len < 0.1) return;
+    const nx = -dy / len, ny = dx / len;
+    ctx.beginPath();
+    ctx.moveTo(p1.x + nx*w1, p1.y + ny*w1);
+    ctx.lineTo(p2.x + nx*w2, p2.y + ny*w2);
+    ctx.arc(p2.x, p2.y, w2, Math.atan2(dy, dx) - Math.PI/2, Math.atan2(dy, dx) + Math.PI/2);
+    ctx.lineTo(p1.x - nx*w1, p1.y - ny*w1);
+    ctx.arc(p1.x, p1.y, w1, Math.atan2(-dy, -dx) - Math.PI/2, Math.atan2(-dy, -dx) + Math.PI/2);
+    ctx.closePath();
+    const g = ctx.createLinearGradient(p1.x + nx*w1, p1.y + ny*w1, p1.x - nx*w1, p1.y - ny*w1);
+    const c = hexToRgb(color);
+    g.addColorStop(0,   `rgba(${c.r},${c.g},${c.b},0.2)`);
+    g.addColorStop(0.4, `rgba(${c.r},${c.g},${c.b},0.8)`);
+    g.addColorStop(1,   `rgba(${c.r},${c.g},${c.b},0.15)`);
+    ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.stroke();
+  }
+  drawSeg(Hp, K, getW(18, Hp.z), getW(12, K.z), col);
+  drawSeg(K,  A, getW(12, K.z),  getW(7,  A.z), col);
+  drawSeg(A,  T, getW(7,  A.z),  getW(6,  T.z), col);
+  ctx.restore();
+}
+
+// ─── CAM MECHANISM DRAW ───────────────────────────────────────────────────────
+// Shape: r(relA) = baseR + major*max(0,-sin(relA)) + minor*max(0,sin(relA))
+// Major lobe is in the -sin(relA) > 0 half = relA in (π, 2π) i.e. bottom half
+// When camAngle=0 (phase=0), follower at relA=-π/2: -sin(-π/2)=1 → peak → correct!
+function drawCamMechanism(ctx, cx, cy, radius, offset, outputVal, label) {
+  ctx.save(); ctx.translate(cx, cy);
+
+  const R = radius * 1.15;
+  const camAngle = normPhase(phase, 0) * Math.PI * 2;  // shaft rotation angle
+
+  // Visual scale: map mm amplitudes to pixel radii
+  const maxMajor = 30; // slider max
+  const baseR  = R * 0.30;
+  const majorR = R * 0.42 * Math.min(1, S.major / maxMajor);
+  const minorR = R * 0.42 * Math.min(1, S.minor / maxMajor) * (S.major > 0 ? Math.min(1, S.minor / S.major) : 1);
+
+  // ── Cam body path ──
+  const STEPS = 256;
   ctx.beginPath();
-  ctx.arc(pinX, pinY, 5, 0, Math.PI * 2);
-  ctx.fillStyle = isRight ? '#ff6e50' : '#38d9a9';
-  ctx.fill();
+  for (let i = 0; i <= STEPS; i++) {
+    // relA is the angle on the cam body in the cam's own frame
+    const relA = (i / STEPS) * Math.PI * 2;
+    // world angle of this point = relA + camAngle
+    const worldA = relA + camAngle;
+    const r = baseR + majorR * Math.max(0, -Math.sin(relA)) + minorR * Math.max(0, Math.sin(relA));
+    if (i === 0) ctx.moveTo(r * Math.cos(worldA), r * Math.sin(worldA));
+    else         ctx.lineTo(r * Math.cos(worldA), r * Math.sin(worldA));
+  }
+  ctx.closePath();
 
+  const col = label === 'RIGHT' ? '#ff6e50' : '#38d9a9';
+  const camGrad = ctx.createRadialGradient(0,0,R*0.05, 0,0,R*0.75);
+  camGrad.addColorStop(0, '#1c2c44');
+  camGrad.addColorStop(1, '#0b121e');
+  ctx.fillStyle = camGrad; ctx.fill();
+  ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.stroke();
+
+  // ── Centre axle ──
+  ctx.beginPath(); ctx.arc(0, 0, R * 0.09, 0, Math.PI * 2);
+  ctx.fillStyle = '#4a6888'; ctx.fill();
+
+  // ── Keyway: marks major-lobe axis on cam body (relA = 3π/2 = pointing down in cam frame) ──
+  const keyRelA  = Math.PI * 3 / 2; // where -sin is max (=1)
+  const keyWorldA = keyRelA + camAngle;
+  const keyR = baseR + majorR;
   ctx.beginPath();
-  ctx.arc(0, 0, radius * 0.25, 0, Math.PI * 2);
-  ctx.fillStyle = '#141e30';
-  ctx.fill();
-  ctx.strokeStyle = '#4a6888';
-  ctx.lineWidth = 2;
-  ctx.stroke();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(keyR * 0.9 * Math.cos(keyWorldA), keyR * 0.9 * Math.sin(keyWorldA));
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1.2; ctx.stroke();
 
-  ctx.fillStyle = '#445068';
-  ctx.font = '10px Barlow Condensed';
-  ctx.textAlign = 'center';
-  ctx.fillText(label, 0, radius + 18);
+  // ── Follower at top (world angle = -π/2) ──
+  // relA of follower = topWorldA - camAngle = -π/2 - camAngle
+  const topWorldA = -Math.PI / 2;
+  const follRelA  = topWorldA - camAngle;
+  const follR = baseR + majorR * Math.max(0, -Math.sin(follRelA)) + minorR * Math.max(0, Math.sin(follRelA));
+  const frY = -follR;  // y in translated coords (top of cam = negative y)
+
+  // Guide rails
+  ctx.beginPath();
+  ctx.moveTo(-4, -R*0.25); ctx.lineTo(-4, -R - 10);
+  ctx.moveTo( 4, -R*0.25); ctx.lineTo( 4, -R - 10);
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1; ctx.stroke();
+  // Stem
+  ctx.beginPath(); ctx.moveTo(0, frY); ctx.lineTo(0, -R - 10);
+  ctx.strokeStyle = 'rgba(240,192,64,0.5)'; ctx.lineWidth = 1.5; ctx.stroke();
+  // Follower disc
+  ctx.beginPath(); ctx.arc(0, frY, 5.5, 0, Math.PI * 2);
+  ctx.fillStyle = col; ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 0.8; ctx.stroke();
+
+  // ── Major lobe annotation (relA = 3π/2 = max radius, world direction) ──
+  const majWorldA = keyWorldA;
+  const majTipR = baseR + majorR;
+  const mx = Math.cos(majWorldA) * (majTipR + 6), my = Math.sin(majWorldA) * (majTipR + 6);
+  ctx.beginPath();
+  ctx.moveTo(Math.cos(majWorldA) * majTipR, Math.sin(majWorldA) * majTipR);
+  ctx.lineTo(mx, my);
+  ctx.strokeStyle = 'rgba(240,192,64,0.7)'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = 'rgba(240,192,64,0.8)'; ctx.font = '500 7px IBM Plex Mono'; ctx.textAlign = 'center';
+  ctx.fillText('MAJ', Math.cos(majWorldA) * (majTipR + 14), Math.sin(majWorldA) * (majTipR + 14) + 3);
+
+  // ── Minor lobe annotation (relA = π/2 = max of sin, world direction) ──
+  const minRelA   = Math.PI / 2;
+  const minWorldA = minRelA + camAngle;
+  const minTipR   = baseR + minorR;
+  ctx.beginPath();
+  ctx.moveTo(Math.cos(minWorldA) * minTipR, Math.sin(minWorldA) * minTipR);
+  ctx.lineTo(Math.cos(minWorldA) * (minTipR + 5), Math.sin(minWorldA) * (minTipR + 5));
+  ctx.strokeStyle = 'rgba(180,200,255,0.5)'; ctx.lineWidth = 0.8; ctx.stroke();
+  ctx.fillStyle = 'rgba(180,200,255,0.7)';
+  ctx.fillText('MIN', Math.cos(minWorldA) * (minTipR + 12), Math.sin(minWorldA) * (minTipR + 12) + 3);
+
+  // ── Live output readout ──
+  ctx.fillStyle = col; ctx.font = '600 8px IBM Plex Mono'; ctx.textAlign = 'center';
+  ctx.fillText(outputVal.toFixed(1) + ' mm', 0, R * 0.78);
+
+  // ── Side label ──
+  ctx.fillStyle = col; ctx.font = '600 10px Barlow Condensed';
+  ctx.fillText(label, 0, R + 17);
 
   ctx.restore();
 }
 
-// ─── PELVIS COMPONENTS ────────────────────────────────────────────────────────
+// ─── CRANK MECHANISM ─────────────────────────────────────────────────────────
+function drawCrankMechanism(ctx, cx, cy, radius, crankPhaseNorm, output, anatomicalLabel) {
+  ctx.save(); ctx.translate(cx, cy);
+  const R = radius * 1.4;
+  ctx.beginPath(); ctx.arc(0,0,R,0,Math.PI*2); ctx.strokeStyle='#4a6888'; ctx.lineWidth=2; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,R*0.2,0,Math.PI*2); ctx.fillStyle='#141e30'; ctx.fill(); ctx.strokeStyle='#4a6888'; ctx.lineWidth=2; ctx.stroke();
+  const cr = crankPhaseNorm * Math.PI * 2;
+  const px = R*0.5*Math.cos(cr), py = R*0.5*Math.sin(cr);
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(px,py); ctx.strokeStyle='#4a6890'; ctx.lineWidth=2.5; ctx.stroke();
+  ctx.beginPath(); ctx.arc(px,py,6,0,Math.PI*2);
+  ctx.fillStyle = anatomicalLabel==='RIGHT' ? '#ff6e50' : '#38d9a9'; ctx.fill();
+  ctx.fillStyle = anatomicalLabel==='RIGHT' ? '#ff6e50' : '#38d9a9';
+  ctx.font='600 10px Barlow Condensed'; ctx.textAlign='center';
+  ctx.fillText(anatomicalLabel, 0, R+18);
+  ctx.restore();
+}
+
+// ─── WHEEL MECHANISM ─────────────────────────────────────────────────────────
+function drawWheelMechanism(ctx, cx, cy, radius, wheelPhaseNorm, anatomicalLabel) {
+  ctx.save(); ctx.translate(cx, cy);
+  const wr = wheelPhaseNorm * Math.PI * 2;
+  ctx.beginPath(); ctx.arc(0,0,radius,0,Math.PI*2); ctx.strokeStyle='#4a6888'; ctx.lineWidth=2; ctx.stroke();
+  for (let i = 0; i < 4; i++) {
+    const a = (i/4)*Math.PI*2+wr;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(radius*Math.cos(a), radius*Math.sin(a));
+    ctx.strokeStyle='#2a3e5a'; ctx.lineWidth=1; ctx.stroke();
+  }
+  const px = radius*Math.cos(wr), py = radius*Math.sin(wr);
+  ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,radius+10);
+  ctx.strokeStyle='rgba(240,192,64,0.35)'; ctx.lineWidth=1; ctx.stroke();
+  ctx.beginPath(); ctx.rect(px-5,radius+6,10,5);
+  ctx.fillStyle='rgba(240,192,64,0.25)'; ctx.fill(); ctx.strokeStyle='rgba(240,192,64,0.5)'; ctx.lineWidth=0.8; ctx.stroke();
+  ctx.beginPath(); ctx.arc(px,py,5,0,Math.PI*2);
+  ctx.fillStyle = anatomicalLabel==='RIGHT' ? '#ff6e50' : '#38d9a9'; ctx.fill();
+  ctx.beginPath(); ctx.arc(0,0,radius*0.25,0,Math.PI*2);
+  ctx.fillStyle='#141e30'; ctx.fill(); ctx.strokeStyle='#4a6888'; ctx.lineWidth=2; ctx.stroke();
+  ctx.fillStyle = anatomicalLabel==='RIGHT' ? '#ff6e50' : '#38d9a9';
+  ctx.font='600 10px Barlow Condensed'; ctx.textAlign='center';
+  ctx.fillText(anatomicalLabel, 0, radius+24);
+  ctx.restore();
+}
+
+// ─── PELVIS ───────────────────────────────────────────────────────────────────
 function drawSacrumFrontal(ctx, cx, cy, pelW) {
-  ctx.save(); ctx.translate(cx,cy);
+  ctx.save(); ctx.translate(cx, cy);
   const sW=pelW*0.28, sTop=-pelW*0.52, sBot=pelW*0.18;
   ctx.beginPath();
   ctx.moveTo(-sW*0.9,sTop);
@@ -826,338 +553,213 @@ function drawSacrumFrontal(ctx, cx, cy, pelW) {
   ctx.bezierCurveTo(sW*0.9,sBot*0.3,sW*1.1,sTop*0.5,sW*0.9,sTop);
   ctx.bezierCurveTo(sW*0.55,sTop*1.1,-sW*0.55,sTop*1.1,-sW*0.9,sTop);
   ctx.closePath();
-  const sg=ctx.createLinearGradient(-sW,sTop,sW,sBot);
+  const sg = ctx.createLinearGradient(-sW,sTop,sW,sBot);
   sg.addColorStop(0,'#283850'); sg.addColorStop(1,'#141e30');
-  ctx.fillStyle=sg; ctx.fill();
-  ctx.strokeStyle='#3a5270'; ctx.lineWidth=1.4; ctx.stroke();
-  for(let i=0;i<3;i++){
-    const fy=sTop+(i+1)*(sBot-sTop)*0.22;
-    const fx=sW*0.38;
-    [[-fx,fy],[fx,fy]].forEach(([x,y])=>{
-      ctx.beginPath(); ctx.ellipse(x,y,2.2,1.6,0,0,Math.PI*2);
-      ctx.fillStyle='#0d1622'; ctx.fill();
-      ctx.strokeStyle='#2a3850'; ctx.lineWidth=0.7; ctx.stroke();
-    });
-  }
+  ctx.fillStyle=sg; ctx.fill(); ctx.strokeStyle='#3a5270'; ctx.lineWidth=1.4; ctx.stroke();
   ctx.restore();
 }
 
-function drawIliumWorld(ctx, cx, cy, pelW, hikeRad, side) {
-  const ang = side * hikeRad;
-  const pivX = side === 1 ?  pelW * 0.22 : -pelW * 0.22;
-  const pivY = -pelW * 0.62 * 0.62;
-
-  ctx.save();
-  ctx.translate(cx + pivX, cy + pivY);
-  ctx.rotate(-ang);
-
-  const ow = pelW * 0.72 * side;
-  const crestH = -pelW * 0.52;
-
+function drawIliumWorld(ctx, cx, cy, pelW, hikeVal, side) {
+  // hikeVal in mm (0..major), convert to visual angle for pelvis tilt display
+  const maxMm  = Math.max(S.major, 1);
+  const angDeg = (hikeVal / maxMm) * 8;  // max visual tilt = 8°
+  const ang = (side === 1 ? -1 : 1) * angDeg * Math.PI / 180;
+  const pivX = side === 1 ? pelW*0.22 : -pelW*0.22;
+  const pivY = -pelW*0.62*0.62;
+  ctx.save(); ctx.translate(cx + pivX, cy + pivY); ctx.rotate(ang);
+  const ow = pelW*0.72*side, cH = -pelW*0.52;
   ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.bezierCurveTo(ow*0.3,  pelW*0.22, ow*0.75, pelW*0.26, ow*0.88, pelW*0.14);
-  ctx.bezierCurveTo(ow*0.95, pelW*0.04, ow*0.82,-pelW*0.02, ow*0.62,-pelW*0.08);
-  ctx.bezierCurveTo(ow*0.35,-pelW*0.14, ow*0.12,-pelW*0.16, 0,       -pelW*0.18);
-  ctx.bezierCurveTo(-side*pelW*0.04,-pelW*0.32,-side*pelW*0.02,crestH*0.6,side*pelW*0.05,crestH);
-  ctx.bezierCurveTo(ow*0.15,crestH*1.08,ow*0.55,crestH*1.06,ow*0.78,crestH*0.72);
-  ctx.bezierCurveTo(ow*0.88,crestH*0.4, ow*0.96,pelW*0.08,  ow*0.88,pelW*0.14);
+  ctx.moveTo(0,0);
+  ctx.bezierCurveTo(ow*0.3,pelW*0.22,ow*0.75,pelW*0.26,ow*0.88,pelW*0.14);
+  ctx.bezierCurveTo(ow*0.95,pelW*0.04,ow*0.82,-pelW*0.02,ow*0.62,-pelW*0.08);
+  ctx.bezierCurveTo(ow*0.35,-pelW*0.14,ow*0.12,-pelW*0.16,0,-pelW*0.18);
+  ctx.bezierCurveTo(-side*pelW*0.04,-pelW*0.32,-side*pelW*0.02,cH*0.6,side*pelW*0.05,cH);
+  ctx.bezierCurveTo(ow*0.15,cH*1.08,ow*0.55,cH*1.06,ow*0.78,cH*0.72);
+  ctx.bezierCurveTo(ow*0.88,cH*0.4,ow*0.96,pelW*0.08,ow*0.88,pelW*0.14);
   ctx.closePath();
-
-  const iGrad = ctx.createLinearGradient(0,crestH,ow,pelW*0.2);
-  iGrad.addColorStop(0,'#243450'); iGrad.addColorStop(0.5,'#1a2840'); iGrad.addColorStop(1,'#111e32');
-  ctx.fillStyle = iGrad; ctx.fill();
-  glow(ctx,'#5a80b0',10);
-  ctx.strokeStyle='#4a6890'; ctx.lineWidth=1.6; ctx.stroke(); noglow(ctx);
-
-  const asisX=ow*0.78, asisY=crestH*0.72;
-  ctx.beginPath(); ctx.arc(asisX,asisY,3.5,0,Math.PI*2);
+  const ig = ctx.createLinearGradient(0,cH,ow,pelW*0.2);
+  ig.addColorStop(0,'#243450'); ig.addColorStop(0.5,'#1a2840'); ig.addColorStop(1,'#111e32');
+  ctx.fillStyle=ig; ctx.fill();
+  glow(ctx,'#5a80b0',10); ctx.strokeStyle='#4a6890'; ctx.lineWidth=1.6; ctx.stroke(); noglow(ctx);
+  ctx.beginPath(); ctx.arc(ow*0.78,cH*0.72,3.5,0,Math.PI*2);
   ctx.fillStyle='#e8f040'; glow(ctx,'#e8f040',8); ctx.fill(); noglow(ctx);
-
   const acX=ow*0.76, acY=pelW*0.12, acR=pelW*0.18;
-  const acGrad=ctx.createRadialGradient(acX,acY,1,acX,acY,acR);
-  acGrad.addColorStop(0,'#080f1c'); acGrad.addColorStop(0.6,'#162030'); acGrad.addColorStop(1,'#2a3e5a');
-  ctx.beginPath(); ctx.arc(acX,acY,acR,0,Math.PI*2);
-  ctx.fillStyle=acGrad; ctx.fill();
-  ctx.beginPath(); ctx.arc(acX,acY,acR,0,Math.PI*2);
-  ctx.strokeStyle='#4a6888'; ctx.lineWidth=2.2; ctx.stroke();
-
+  const acG = ctx.createRadialGradient(acX,acY,1,acX,acY,acR);
+  acG.addColorStop(0,'#080f1c'); acG.addColorStop(0.6,'#162030'); acG.addColorStop(1,'#2a3e5a');
+  ctx.beginPath(); ctx.arc(acX,acY,acR,0,Math.PI*2); ctx.fillStyle=acG; ctx.fill();
+  ctx.beginPath(); ctx.arc(acX,acY,acR,0,Math.PI*2); ctx.strokeStyle='#4a6888'; ctx.lineWidth=2.2; ctx.stroke();
   ctx.restore();
-
-  const cosA=Math.cos(-ang), sinA=Math.sin(-ang);
-  return { x: cx + pivX + acX*cosA - acY*sinA, y: cy + pivY + acX*sinA + acY*cosA, r: acR };
+  const cosA = Math.cos(ang), sinA = Math.sin(ang);
+  return { x: cx+pivX+acX*cosA-acY*sinA, y: cy+pivY+acX*sinA+acY*cosA, r: acR };
 }
 
 function drawPelvisTopDown(ctx, cx, cy, pelW, tiltRad, transRad) {
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate(transRad);
-
-  const frontY = -pelW * 0.55 + tiltRad * 120;
-  const backY  = pelW * 0.45 - tiltRad * 60;
-  const rimX   = pelW * 0.85;
-
+  ctx.save(); ctx.translate(cx,cy); ctx.rotate(transRad);
+  const frontY=-pelW*0.55+tiltRad*120, backY=pelW*0.45-tiltRad*60, rimX=pelW*0.85;
   ctx.beginPath();
-  ctx.moveTo(0, frontY); 
-  ctx.bezierCurveTo(rimX, frontY, rimX + 15, 0, rimX, backY - 20); 
-  ctx.bezierCurveTo(rimX - 25, backY + 15, 20, backY, 0, backY);
-  ctx.bezierCurveTo(-20, backY, -(rimX - 25), backY + 15, -rimX, backY - 20); 
-  ctx.bezierCurveTo(-(rimX + 15), 0, -rimX, frontY, 0, frontY); 
+  ctx.moveTo(0,frontY);
+  ctx.bezierCurveTo(rimX,frontY,rimX+15,0,rimX,backY-20);
+  ctx.bezierCurveTo(rimX-25,backY+15,20,backY,0,backY);
+  ctx.bezierCurveTo(-20,backY,-(rimX-25),backY+15,-rimX,backY-20);
+  ctx.bezierCurveTo(-(rimX+15),0,-rimX,frontY,0,frontY);
   ctx.closePath();
-
-  const g = ctx.createLinearGradient(0, frontY, 0, backY);
-  g.addColorStop(0, '#1a2840');
-  g.addColorStop(1, '#0b121e');
-  ctx.fillStyle = g; ctx.fill();
-  glow(ctx, '#4a6888', 12);
-  ctx.strokeStyle = '#4a6888'; ctx.lineWidth = 2.5; ctx.stroke(); noglow(ctx);
-
-  ctx.beginPath(); ctx.arc(0, frontY + 8, 6, 0, Math.PI*2); ctx.fillStyle='#3a5878'; ctx.fill();
-  ctx.beginPath(); ctx.arc(0, backY - 12, 10, 0, Math.PI*2); ctx.fillStyle='#141e30'; ctx.fill();
-
+  const g = ctx.createLinearGradient(0,frontY,0,backY);
+  g.addColorStop(0,'#1a2840'); g.addColorStop(1,'#0b121e');
+  ctx.fillStyle=g; ctx.fill();
+  glow(ctx,'#4a6888',12); ctx.strokeStyle='#4a6888'; ctx.lineWidth=2.5; ctx.stroke(); noglow(ctx);
   ctx.restore();
-
-  const acY = (frontY + backY) * 0.25;
-  const acX = rimX * 0.95;
-  const cosR = Math.cos(transRad), sinR = Math.sin(transRad);
-
+  const acY=(frontY+backY)*0.25, acX=rimX*0.95;
+  const cosR=Math.cos(transRad), sinR=Math.sin(transRad);
   return {
-    right: { x: cx + acX * cosR - acY * sinR, y: cy + acX * sinR + acY * cosR },
-    left:  { x: cx - acX * cosR - acY * sinR, y: cy - acX * sinR + acY * cosR }
+    right: { x: cx+acX*cosR-acY*sinR, y: cy+acX*sinR+acY*cosR },
+    left:  { x: cx-acX*cosR-acY*sinR, y: cy-acX*sinR+acY*cosR }
   };
 }
 
-// ─── RENDER 1: PELVIC HIKE (Frontal 3D) ──────────────────────────────────────
+// ─── RENDER 1 : PELVIC HIKE ───────────────────────────────────────────────────
 function render1(ph) {
-  const ctx=ctx1, w=W(ctx), h=H(ctx);
+  const ctx = ctx1, w = W(ctx), h = H(ctx);
   bg(ctx);
+  const cx = w/2, cy = h*0.32, pelW = Math.min(w,h)*0.36;
+  dref(ctx, 30, cy, w-30, cy); dref(ctx, cx, 20, cx, h-20);
 
-  const cx=w/2, cy=h*0.32;
-  const pelW=Math.min(w,h)*0.36;
+  const hike = getHike(ph);
 
-  dref(ctx, 30,cy,w-30,cy);
-  dref(ctx, cx,20,cx,h-20);
-
-  const camMajorAmp = S.hike * 0.75;
-  const camMinorAmp = S.hike * 0.2;
-  const rightHikeOutput = getCamOutput(ph, RIGHT_PHASE, camMajorAmp, camMinorAmp); 
-  const leftHikeOutput = getCamOutput(ph, LEFT_PHASE, camMajorAmp, camMinorAmp); 
-
-  const rightHikeRad = rightHikeOutput * Math.PI / 180;
-  const leftHikeRad = leftHikeOutput * Math.PI / 180;
-
-  const ac = {
-    right: drawIliumWorld(ctx, cx, cy, pelW, rightHikeRad,  1),
-    left:  drawIliumWorld(ctx, cx, cy, pelW, leftHikeRad,  -1),
-  };
+  const acRight = drawIliumWorld(ctx, cx, cy, pelW, hike.right,  1);
+  const acLeft  = drawIliumWorld(ctx, cx, cy, pelW, hike.left,  -1);
   drawSacrumFrontal(ctx, cx, cy, pelW);
 
-  const camDisplayY = h * 0.65;
-  const camOffset = Math.min(80, w * 0.24);
-  const camRadius = Math.min(30, Math.max(22, w * 0.075));
-  drawCamMechanism(ctx, cx - camOffset, camDisplayY, camRadius, phaseOf(ph, RIGHT_PHASE), rightHikeOutput, 'RIGHT');
-  drawCamMechanism(ctx, cx + camOffset, camDisplayY, camRadius, phaseOf(ph, LEFT_PHASE), leftHikeOutput, 'LEFT');
-
-  for(let g=4;g>=1;g--){
-    const gph = ph - g*0.04;
-    const rLegG = getLeg3D(gph, true);
-    const lLegG = getLeg3D(gph, false);
-    const op = (5-g)/4 * 0.12;
-    drawHumanLeg(ctx, ac.right.x, ac.right.y, rLegG, 'front', '#ff6e50', op);
-    drawHumanLeg(ctx, ac.left.x, ac.left.y, lLegG, 'front', '#38d9a9', op);
+  for (let g = 4; g >= 1; g--) {
+    const gph = ph - g*0.04, op = (5-g)/4*0.12;
+    drawHumanLeg(ctx, acRight.x, acRight.y, getLeg3D(gph,true),  'front','#ff6e50', op);
+    drawHumanLeg(ctx, acLeft.x,  acLeft.y,  getLeg3D(gph,false), 'front','#38d9a9', op);
   }
-
-  const rLeg = getLeg3D(ph, true);
-  const lLeg = getLeg3D(ph, false);
-  
-  const rZ = rLeg.knee.z;
-  const lZ = lLeg.knee.z;
-
-  if (rZ < lZ) {
-    drawHumanLeg(ctx, ac.right.x, ac.right.y, rLeg, 'front', '#ff6e50');
-    drawHumanLeg(ctx, ac.left.x, ac.left.y, lLeg, 'front', '#38d9a9');
+  const rLeg = getLeg3D(ph,true), lLeg = getLeg3D(ph,false);
+  if (rLeg.knee.z < lLeg.knee.z) {
+    drawHumanLeg(ctx, acRight.x, acRight.y, rLeg, 'front','#ff6e50');
+    drawHumanLeg(ctx, acLeft.x,  acLeft.y,  lLeg, 'front','#38d9a9');
   } else {
-    drawHumanLeg(ctx, ac.left.x, ac.left.y, lLeg, 'front', '#38d9a9');
-    drawHumanLeg(ctx, ac.right.x, ac.right.y, rLeg, 'front', '#ff6e50');
+    drawHumanLeg(ctx, acLeft.x,  acLeft.y,  lLeg, 'front','#38d9a9');
+    drawHumanLeg(ctx, acRight.x, acRight.y, rLeg, 'front','#ff6e50');
   }
 
-  const avgHike = (rightHikeOutput + leftHikeOutput) / 2;
-  const isRStance = rightHikeOutput > leftHikeOutput;
-  ctx.fillStyle='#e8f04066'; ctx.font='bold 9px Barlow Condensed'; ctx.textAlign='center';
-  ctx.fillText(isRStance?'R HIKE':'L HIKE', cx, h * 0.735); ctx.textAlign='left';
+  const camY = h*0.66, camOff = Math.min(80, w*0.24), camR = Math.min(30, Math.max(22, w*0.075));
+  drawCamMechanism(ctx, cx-camOff, camY, camR, LEFT_CAM_OFFSET,  hike.left,  'LEFT');
+  drawCamMechanism(ctx, cx+camOff, camY, camR, RIGHT_CAM_OFFSET, hike.right, 'RIGHT');
 
-  drawGraph(ctx, 20, h * 0.78, w - 28, h * 0.2, 'Hike', history.hike, '#ff6e50', '#38d9a9', -S.hike, S.hike);
+  ctx.fillStyle='rgba(240,192,64,0.45)'; ctx.font='600 9px Barlow Condensed'; ctx.textAlign='center';
+  ctx.fillText('CAM MECHANISM', cx, camY - camR*1.1 - 28);
+
+  drawGraph(ctx, 20, h*0.80, w-28, h*0.18, 'HIKE (mm)', history.hike, 0, S.major);
+
+  const stance = hike.right > hike.left ? 'R STANCE' : 'L STANCE';
+  ctx.fillStyle='#e8f04066'; ctx.font='bold 9px Barlow Condensed'; ctx.textAlign='center';
+  ctx.fillText(stance, cx, h*0.765);
 
   document.getElementById('r1').innerHTML =
-    `<b>R HIKE</b> ${rightHikeOutput.toFixed(1)}°<br>` +
-    `<b>L HIKE</b> ${leftHikeOutput.toFixed(1)}°<br>` +
+    `<b>R HIKE</b> ${hike.right.toFixed(1)} mm<br>` +
+    `<b>L HIKE</b> ${hike.left.toFixed(1)} mm<br>`  +
     `<b>PHASE</b> ${(ph*360).toFixed(0)}°`;
 }
 
-
-// ─── RENDER 2: PELVIC TILT (Transverse Top-Down) ─────────────────────────────
+// ─── RENDER 2 : PELVIC TILT ───────────────────────────────────────────────────
 function render2(ph) {
-  const ctx=ctx2, w=W(ctx), h=H(ctx);
+  const ctx = ctx2, w = W(ctx), h = H(ctx);
   bg(ctx);
+  const cx = w*0.5, cy = h*0.32;
+  dref(ctx, cx, 20, cx, h*0.65); dref(ctx, 30, cy, w-30, cy);
 
-  const cx=w*0.5, cy=h*0.32;
-
-  dref(ctx, cx,20,cx,h*0.65);
-  dref(ctx, 30,cy,w-30,cy);
-
-  const crankAmp = S.tilt * 0.8;
-  const rightCrankOutput = getCrankOutput(ph, crankAmp, RIGHT_PHASE);
-  const leftCrankOutput = getCrankOutput(ph, crankAmp, LEFT_PHASE); 
-
-  const rightTiltRad = rightCrankOutput * Math.PI / 180;
-  const leftTiltRad = leftCrankOutput * Math.PI / 180;
-
-  const transRad = S.swing * 0.22 * Math.cos(2*Math.PI*ph) * Math.PI/180;
-
+  const tilt = getTilt(ph, S.tilt);
+  const transRad = S.swing*0.22*Math.cos(2*Math.PI*ph)*Math.PI/180;
   const pelW = Math.min(w,h)*0.35;
-  const ac = drawPelvisTopDown(ctx, cx, cy, pelW, rightTiltRad, transRad);
+  const ac = drawPelvisTopDown(ctx, cx, cy, pelW, tilt.right*Math.PI/180, transRad);
 
-  const crankDisplayY = h * 0.65;
-  const crankOffset = Math.min(80, w * 0.24);
-  const crankRadius = Math.min(25, Math.max(18, w * 0.065));
-  drawCrankMechanism(ctx, cx - crankOffset, crankDisplayY, crankRadius, phaseOf(ph, RIGHT_PHASE), rightCrankOutput, 'RIGHT');
-  drawCrankMechanism(ctx, cx + crankOffset, crankDisplayY, crankRadius, phaseOf(ph, LEFT_PHASE), leftCrankOutput, 'LEFT');
-
-  for(let g=4;g>=1;g--){
-    const gph = ph - g*0.04;
-    const rLegG = getLeg3D(gph, true);
-    const lLegG = getLeg3D(gph, false);
-    const op = (5-g)/4 * 0.12;
-    drawHumanLeg(ctx, ac.right.x, ac.right.y, rLegG, 'top', '#ff6e50', op);
-    drawHumanLeg(ctx, ac.left.x, ac.left.y, lLegG, 'top', '#38d9a9', op);
+  for (let g = 4; g >= 1; g--) {
+    const gph = ph-g*0.04, op = (5-g)/4*0.12;
+    drawHumanLeg(ctx, ac.right.x, ac.right.y, getLeg3D(gph,true),  'top','#ff6e50', op);
+    drawHumanLeg(ctx, ac.left.x,  ac.left.y,  getLeg3D(gph,false), 'top','#38d9a9', op);
   }
-
-  const rLeg = getLeg3D(ph, true);
-  const lLeg = getLeg3D(ph, false);
-  
+  const rLeg = getLeg3D(ph,true), lLeg = getLeg3D(ph,false);
   if (rLeg.knee.y > lLeg.knee.y) {
-    drawHumanLeg(ctx, ac.right.x, ac.right.y, rLeg, 'top', '#ff6e50');
-    drawHumanLeg(ctx, ac.left.x, ac.left.y, lLeg, 'top', '#38d9a9');
+    drawHumanLeg(ctx, ac.right.x, ac.right.y, rLeg, 'top','#ff6e50');
+    drawHumanLeg(ctx, ac.left.x,  ac.left.y,  lLeg, 'top','#38d9a9');
   } else {
-    drawHumanLeg(ctx, ac.left.x, ac.left.y, lLeg, 'top', '#38d9a9');
-    drawHumanLeg(ctx, ac.right.x, ac.right.y, rLeg, 'top', '#ff6e50');
+    drawHumanLeg(ctx, ac.left.x,  ac.left.y,  lLeg, 'top','#38d9a9');
+    drawHumanLeg(ctx, ac.right.x, ac.right.y, rLeg, 'top','#ff6e50');
   }
 
-  const rTilt = (rightTiltRad*180/Math.PI).toFixed(1);
-  const lTilt = (leftTiltRad*180/Math.PI).toFixed(1);
+  const crY = h*0.65, crOff = Math.min(80, w*0.24), crR = Math.min(25, Math.max(18, w*0.065));
+  drawCrankMechanism(ctx, cx-crOff, crY, crR, normPhase(ph,0.5), tilt.left,  'LEFT');
+  drawCrankMechanism(ctx, cx+crOff, crY, crR, normPhase(ph,0),   tilt.right, 'RIGHT');
 
-  drawGraph(ctx, 20, h * 0.78, w - 28, h * 0.2, 'Tilt', history.tilt, '#ff6e50', '#38d9a9', -S.tilt, S.tilt);
+  ctx.fillStyle='rgba(240,192,64,0.45)'; ctx.font='600 9px Barlow Condensed'; ctx.textAlign='center';
+  ctx.fillText('CRANK', cx, crY-crR*1.4-8);
+
+  drawGraph(ctx, 20, h*0.78, w-28, h*0.2, 'TILT', history.tilt, -S.tilt, S.tilt);
 
   document.getElementById('r2').innerHTML =
-    `<b>R TILT</b> ${rTilt}° (${rightTiltRad>0?'Anterior':'Posterior'})<br>` +
-    `<b>L TILT</b> ${lTilt}° (${leftTiltRad>0?'Anterior':'Posterior'})<br>` +
+    `<b>R TILT</b> ${tilt.right.toFixed(1)}° (${tilt.right>0?'Ant':'Post'})<br>` +
+    `<b>L TILT</b> ${tilt.left.toFixed(1)}° (${tilt.left>0?'Ant':'Post'})<br>`  +
     `<b>YAW</b> ${(transRad*180/Math.PI).toFixed(1)}°`;
 }
 
-
-// ─── RENDER 3: THIGH SWING (Sagittal Side View) ──────────────────────────────
+// ─── RENDER 3 : THIGH SWING ───────────────────────────────────────────────────
 function render3(ph) {
-  const ctx=ctx3, w=W(ctx), h=H(ctx);
+  const ctx = ctx3, w = W(ctx), h = H(ctx);
   bg(ctx);
+  const cx = w*0.5, cy = h*0.28;
+  dref(ctx, cx-60, cy, cx+60, cy); dref(ctx, cx, cy-15, cx, h*0.65);
 
-  const cx=w*0.5, cy=h*0.28;
-  dref(ctx, cx-60,cy, cx+60,cy);
-  dref(ctx, cx,cy-15, cx,h*0.65);
-
-  const pelW=Math.min(w,h)*0.13;
-  ctx.save(); ctx.translate(cx,cy);
-  const pw=58;
+  ctx.save(); ctx.translate(cx, cy);
+  const pw = 58;
   ctx.beginPath();
-  ctx.moveTo(-pw,-12); ctx.bezierCurveTo(-pw*0.9,-22,-pw*0.4,-28,0,-26); ctx.bezierCurveTo(pw*0.4,-28,pw*0.9,-22,pw,-12);
-  ctx.bezierCurveTo(pw,0,pw*0.7,10,pw*0.5,12); ctx.bezierCurveTo(pw*0.2,14,-pw*0.2,14,-pw*0.5,12); ctx.bezierCurveTo(-pw*0.7,10,-pw,0,-pw,-12);
+  ctx.moveTo(-pw,-12); ctx.bezierCurveTo(-pw*0.9,-22,-pw*0.4,-28,0,-26);
+  ctx.bezierCurveTo(pw*0.4,-28,pw*0.9,-22,pw,-12); ctx.bezierCurveTo(pw,0,pw*0.7,10,pw*0.5,12);
+  ctx.bezierCurveTo(pw*0.2,14,-pw*0.2,14,-pw*0.5,12); ctx.bezierCurveTo(-pw*0.7,10,-pw,0,-pw,-12);
   ctx.closePath();
-  const pelG=ctx.createLinearGradient(-pw,-28,pw,14);
-  pelG.addColorStop(0,'#243452'); pelG.addColorStop(1,'#101828');
-  ctx.fillStyle=pelG; ctx.fill();
-  ctx.strokeStyle='#4a6888'; ctx.lineWidth=1.5; ctx.stroke();
+  const pG = ctx.createLinearGradient(-pw,-28,pw,14);
+  pG.addColorStop(0,'#243452'); pG.addColorStop(1,'#101828');
+  ctx.fillStyle=pG; ctx.fill(); ctx.strokeStyle='#4a6888'; ctx.lineWidth=1.5; ctx.stroke();
   ctx.restore();
 
-  const rHx=cx+15, lHx=cx-15;
-  
-  for(let g=4;g>=1;g--){
-    const gph = ph - g*0.04;
-    drawHumanLeg(ctx, rHx, cy, getLeg3D(gph, true), 'side', '#ff6e50', (5-g)/4 * 0.1);
-    drawHumanLeg(ctx, lHx, cy, getLeg3D(gph, false), 'side', '#38d9a9', (5-g)/4 * 0.1);
+  const rHx = cx+15, lHx = cx-15;
+  for (let g = 4; g >= 1; g--) {
+    const gph = ph-g*0.04, op = (5-g)/4*0.1;
+    drawHumanLeg(ctx, rHx, cy, getLeg3D(gph,true),  'side','#ff6e50', op);
+    drawHumanLeg(ctx, lHx, cy, getLeg3D(gph,false), 'side','#38d9a9', op);
   }
+  drawHumanLeg(ctx, lHx, cy, getLeg3D(ph,false), 'side','#38d9a9', 0.55);
+  drawHumanLeg(ctx, rHx, cy, getLeg3D(ph,true),  'side','#ff6e50', 1);
 
-  drawHumanLeg(ctx, lHx, cy, getLeg3D(ph, false), 'side', '#38d9a9', 0.55);
-  drawHumanLeg(ctx, rHx, cy, getLeg3D(ph, true), 'side', '#ff6e50', 1);
-
-  [[rHx,'#ff6e50'],[lHx,'#38d9a9']].forEach(([hx,col])=>{
+  [[rHx,'#ff6e50'],[lHx,'#38d9a9']].forEach(([hx,col]) => {
     ctx.beginPath(); ctx.arc(hx,cy,7,0,Math.PI*2);
-    ctx.fillStyle='#060e1c'; ctx.fill();
-    ctx.strokeStyle=col; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='#060e1c'; ctx.fill(); ctx.strokeStyle=col; ctx.lineWidth=2; ctx.stroke();
   });
 
-  const wheelDisplayY = h * 0.65;
-  const wheelOffset = Math.min(80, w * 0.24);
-  const wheelRadius = Math.min(25, Math.max(20, w * 0.065));
-  drawWheelMechanism(ctx, cx - wheelOffset, wheelDisplayY, wheelRadius, ph, true, 'RIGHT');
-  drawWheelMechanism(ctx, cx + wheelOffset, wheelDisplayY, wheelRadius, ph, false, 'LEFT');
+  const wY = h*0.65, wOff = Math.min(80, w*0.24), wR = Math.min(25, Math.max(20, w*0.065));
+  const swing = getSwing(ph, S.swing);
+  drawWheelMechanism(ctx, cx-wOff, wY, wR, normPhase(ph,0),   'LEFT');
+  drawWheelMechanism(ctx, cx+wOff, wY, wR, normPhase(ph,0.5), 'RIGHT');
 
-  const rSwingDeg = getWheelRotation(ph, S.swing, true);
-  const lSwingDeg = getWheelRotation(ph, S.swing, false);
+  ctx.fillStyle='rgba(240,192,64,0.45)'; ctx.font='600 9px Barlow Condensed'; ctx.textAlign='center';
+  ctx.fillText('DRIVER WHEEL', cx, wY-wR-8);
 
-  drawGraph(ctx, 20, h * 0.78, w - 28, h * 0.2, 'Swing', history.swing, '#ff6e50', '#38d9a9', -S.swing, S.swing);
+  drawGraph(ctx, 20, h*0.78, w-28, h*0.2, 'SWING', history.swing, -S.swing, S.swing);
 
   document.getElementById('r3').innerHTML =
-    `<b>R SWING</b> ${rSwingDeg>=0?'+':''}${rSwingDeg.toFixed(1)}°<br>` +
-    `<b>L SWING</b> ${lSwingDeg>=0?'+':''}${lSwingDeg.toFixed(1)}°<br>` +
+    `<b>R SWING</b> ${swing.right>=0?'+':''}${swing.right.toFixed(1)}°<br>` +
+    `<b>L SWING</b> ${swing.left>=0?'+':''}${swing.left.toFixed(1)}°<br>`  +
     `<b>TOTAL ARC</b> ${(S.swing*2).toFixed(0)}°`;
 }
 
-// ─── DATA HISTORY UPDATE ─────────────────────────────────────────────────────
-function updateHistory(ph) {
-  const camMajorAmp = S.hike * 0.75;
-  const camMinorAmp = S.hike * 0.2;
-  const rightHikeOutput = getCamOutput(ph, RIGHT_PHASE, camMajorAmp, camMinorAmp);
-  const leftHikeOutput = getCamOutput(ph, LEFT_PHASE, camMajorAmp, camMinorAmp);
-
-  const crankAmp = S.tilt * 0.8;
-  const rightCrankOutput = getCrankOutput(ph, crankAmp, RIGHT_PHASE);
-  const leftCrankOutput = getCrankOutput(ph, crankAmp, LEFT_PHASE);
-
-  const rSwingDeg = getWheelRotation(ph, S.swing, true);
-  const lSwingDeg = getWheelRotation(ph, S.swing, false);
-
-  history.hike.right.push(rightHikeOutput);
-  history.hike.left.push(leftHikeOutput);
-  history.tilt.right.push(rightCrankOutput);
-  history.tilt.left.push(leftCrankOutput);
-  history.swing.right.push(rSwingDeg);
-  history.swing.left.push(lSwingDeg);
-
-  if (history.hike.right.length > historyBuffer) {
-    history.hike.right.shift();
-    history.hike.left.shift();
-    history.tilt.right.shift();
-    history.tilt.left.shift();
-    history.swing.right.shift();
-    history.swing.left.shift();
-  }
-}
-
-// ─── ANIMATION LOOP ───────────────────────────────────────────────────────────
+// ─── LOOP ─────────────────────────────────────────────────────────────────────
 function loop(ts) {
-  if(!lastTS) lastTS=ts;
-  const dt=Math.min((ts-lastTS)/1000,0.05);
-  lastTS=ts;
-
-  const freq=S.rpm/120;
-  phase=(phase+dt*freq)%1;
-
+  if (!lastTS) lastTS = ts;
+  const dt = Math.min((ts - lastTS) / 1000, 0.05); lastTS = ts;
+  phase = (phase + dt * S.rpm / 120) % 1;
   updateHistory(phase);
-
-  render1(phase);
-  render2(phase);
-  render3(phase);
-
-  document.getElementById('pbar').style.width=(phase*100)+'%';
+  render1(phase); render2(phase); render3(phase);
+  document.getElementById('pbar').style.width = (phase * 100) + '%';
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
