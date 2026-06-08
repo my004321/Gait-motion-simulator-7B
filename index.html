@@ -138,7 +138,7 @@ const S = { rpm: 60, major: 15, minor: 4, tilt: 4, swing: 35 };
 let mode = 'walk', phase = 0, lastTS = null;
 
 const RIGHT_CAM_OFFSET = 0.25;
-const LEFT_CAM_OFFSET  = 0.25;
+const LEFT_CAM_OFFSET  = 0.75;
 
 // Anatomical hip width used to compute pelvic obliquity angle
 // Typical inter-ASIS distance ~280mm
@@ -288,7 +288,7 @@ function drawGraph(ctx, x, y, w, h, title, hist, yMin, yMax) {
   ctx.font = '600 9px Barlow Condensed';
   ctx.fillStyle = '#38d9a9'; ctx.textAlign = 'left';  ctx.fillText('LEFT',  8, 24);
   ctx.fillStyle = '#ff6e50'; ctx.textAlign = 'right'; ctx.fillText('RIGHT', w - 4, 24);
-  ctx.fillStyle = '#ffffff'; ctx.font = '8px IBM Plex Mono'; ctx.textAlign = 'right';
+  ctx.fillStyle = '#445068'; ctx.font = '8px IBM Plex Mono'; ctx.textAlign = 'right';
   ctx.fillText(yMax.toFixed(0), -4, 14);
   ctx.fillText('0', -4, h / 2 + 4);
   ctx.fillText(yMin.toFixed(0), -4, h - 4);
@@ -394,10 +394,8 @@ function drawCamMechanism(ctx, cx, cy, radius, offset, outputVal, label) {
   for (let i = 0; i <= STEPS; i++) {
     const relA = (i / STEPS) * Math.PI * 2;
     const worldA = relA + camAngle;
-    const isLeft = label === 'LEFT';
-  const lobeA = isLeft ? minorR : majorR;
-  const lobeB = isLeft ? majorR : minorR;
-  const r = baseR + lobeA * Math.max(0, -Math.sin(relA)) + lobeB * Math.max(0, Math.sin(relA));    if (i === 0) ctx.moveTo(r * Math.cos(worldA), r * Math.sin(worldA));
+    const r = baseR + majorR * Math.max(0, -Math.sin(relA)) + minorR * Math.max(0, Math.sin(relA));
+    if (i === 0) ctx.moveTo(r * Math.cos(worldA), r * Math.sin(worldA));
     else         ctx.lineTo(r * Math.cos(worldA), r * Math.sin(worldA));
   }
   ctx.closePath();
