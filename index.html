@@ -1017,7 +1017,7 @@ function render2(ph) {
   const pelW = Math.min(w,h)*0.35;
   const ac = drawPelvisTopDown(ctx, cx, cy, pelW, rightTiltRad, transRad);
 
-  const crankDisplayY = h * 0.7;
+  const crankDisplayY = h * 0.9;
   const crankOffset = Math.min(80, w * 0.24);
   const crankRadius = Math.min(25, Math.max(18, w * 0.065));
   drawCrankMechanism(ctx, cx - crankOffset, crankDisplayY, crankRadius, phaseOf(ph, RIGHT_PHASE), rightCrankOutput, 'RIGHT');
@@ -1094,7 +1094,7 @@ function render3(ph) {
     ctx.strokeStyle=col; ctx.lineWidth=2; ctx.stroke();
   });
 
-  const wheelDisplayY = h * 0.85;
+  const wheelDisplayY = h * 0.95;
   const wheelOffset = Math.min(80, w * 0.24);
   const wheelRadius = Math.min(25, Math.max(20, w * 0.065));
   drawWheelMechanism(ctx, cx - wheelOffset, wheelDisplayY, wheelRadius, ph, true, 'RIGHT');
