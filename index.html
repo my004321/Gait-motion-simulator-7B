@@ -1094,16 +1094,16 @@ function render3(ph) {
     ctx.strokeStyle=col; ctx.lineWidth=2; ctx.stroke();
   });
 
-  const wheelDisplayY = h * 1.2;
+  const wheelDisplayY = h * 0.85;
   const wheelOffset = Math.min(80, w * 0.24);
-  const wheelRadius = Math.min(23, Math.max(18, w * 0.065));
+  const wheelRadius = Math.min(25, Math.max(20, w * 0.065));
   drawWheelMechanism(ctx, cx - wheelOffset, wheelDisplayY, wheelRadius, ph, true, 'RIGHT');
   drawWheelMechanism(ctx, cx + wheelOffset, wheelDisplayY, wheelRadius, ph, false, 'LEFT');
 
   const rSwingDeg = getWheelRotation(ph, S.swing, true);
   const lSwingDeg = getWheelRotation(ph, S.swing, false);
 
-  drawGraph(ctx, 20, h * 0.85, w - 28, h * 0.2, 'Swing', history.swing, '#ff6e50', '#38d9a9', -S.swing, S.swing);
+  drawGraph(ctx, 20, h * 0.78, w - 28, h * 0.2, 'Swing', history.swing, '#ff6e50', '#38d9a9', -S.swing, S.swing);
 
   document.getElementById('r3').innerHTML =
     `<b>R SWING</b> ${rSwingDeg>=0?'+':''}${rSwingDeg.toFixed(1)}°<br>` +
