@@ -1000,7 +1000,7 @@ function render2(ph) {
   const ctx=ctx2, w=W(ctx), h=H(ctx);
   bg(ctx);
 
-  const cx=w*0.5, cy=h*0.25;
+  const cx=w*0.5, cy=h*0.32;
 
   dref(ctx, cx,20,cx,h*0.65);
   dref(ctx, 30,cy,w-30,cy);
@@ -1094,9 +1094,9 @@ function render3(ph) {
     ctx.strokeStyle=col; ctx.lineWidth=2; ctx.stroke();
   });
 
-  const wheelDisplayY = h * 0.85;
+  const wheelDisplayY = h * 0.72;
   const wheelOffset = Math.min(80, w * 0.24);
-  const wheelRadius = Math.min(25, Math.max(20, w * 0.065));
+  const wheelRadius = Math.min(25, Math.max(18, w * 0.065));
   drawWheelMechanism(ctx, cx - wheelOffset, wheelDisplayY, wheelRadius, ph, true, 'RIGHT');
   drawWheelMechanism(ctx, cx + wheelOffset, wheelDisplayY, wheelRadius, ph, false, 'LEFT');
 
