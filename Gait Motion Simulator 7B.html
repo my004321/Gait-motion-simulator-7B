@@ -910,9 +910,6 @@ function render1(ph) {
   };
   drawSacrumFrontal(ctx, cx, cy, pelW);
 
-  const camDisplayY = h * 0.75;
-  const camSpacing = Math.max(60, w * 0.15);
-  const camRadius = Math.max(20, w * 0.08);
   drawCamMechanism(ctx, cx - camSpacing, camDisplayY, camRadius, ph, rightHikeOutput, 'RIGHT');
   drawCamMechanism(ctx, cx + camSpacing, camDisplayY, camRadius, (ph + 0.5) % 1, leftHikeOutput, 'LEFT');
 
