@@ -1017,7 +1017,7 @@ function render2(ph) {
   const pelW = Math.min(w,h)*0.35;
   const ac = drawPelvisTopDown(ctx, cx, cy, pelW, rightTiltRad, transRad);
 
-  const crankDisplayY = h * 0.9;
+  const crankDisplayY = h * 0.65;
   const crankOffset = Math.min(80, w * 0.24);
   const crankRadius = Math.min(25, Math.max(18, w * 0.065));
   drawCrankMechanism(ctx, cx - crankOffset, crankDisplayY, crankRadius, phaseOf(ph, RIGHT_PHASE), rightCrankOutput, 'RIGHT');
