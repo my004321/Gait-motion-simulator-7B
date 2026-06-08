@@ -9,7 +9,7 @@
 :root {
   --bg:#0b0d12; --surface:#10131a; --border:#1e2535;
   --accent:#f0c040; --right:#ff6e50; --left:#38d9a9;
-  --muted:#445068; --text:#c8d8f0;
+  --muted:#ffffff; --text:#ffffff;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{min-height:100%;overflow:hidden}
@@ -137,13 +137,13 @@ input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.3)}
 const S = { rpm: 60, major: 15, minor: 4, tilt: 4, swing: 35 };
 let mode = 'walk', phase = 0, lastTS = null;
 
-// Phase offsets exactly matching Python:
-//   dr_exp = 0.25 * (60/rpm)  → normalised = 0.25
-//   dl_exp = 0.75 * (60/rpm)  → normalised = 0.75
 const RIGHT_CAM_OFFSET = 0.25;
 const LEFT_CAM_OFFSET  = 0.75;
 
-// History buffers
+// Anatomical hip width used to compute pelvic obliquity angle
+// Typical inter-ASIS distance ~280mm
+const HIP_WIDTH_MM = 280;
+
 const HIST_N = 120;
 const history = {
   hike:  { right: new Array(HIST_N).fill(0), left: new Array(HIST_N).fill(0) },
@@ -229,50 +229,13 @@ function dref(ctx, x1, y1, x2, y2) {
 }
 const normPhase = (p, off = 0) => ((p + off) % 1 + 1) % 1;
 
-// ─── CAM OUTPUT — exact Python formula ───────────────────────────────────────
-// Python: s = sin(2π * f * (t - delay))
-//         out = s >= 0 ? major * s : minor * (-s)
-// In normalised phase with offset:
-//   localPhase = normPhase(phase, offset)
-//   s = sin(2π * localPhase)
-//   out = s >= 0 ? major * s : minor * (-s)
-//
-// Phase offsets: RIGHT = 0.25, LEFT = 0.75
-// At phase=0: RIGHT s=sin(π/2)=1  → output = major (peak)
-//             LEFT  s=sin(3π/2)=-1 → output = minor (minor peak)
+// ─── CAM OUTPUT ───────────────────────────────────────────────────────────────
 function getCamOutput(ph, offset, major, minor) {
   const localPhase = normPhase(ph, offset);
   const s = Math.sin(2 * Math.PI * localPhase);
   return s >= 0 ? major * s : minor * (-s);
 }
 
-// ─── CAM BODY SHAPE — derived from formula ────────────────────────────────────
-// Follower at top (angle = -π/2 in world). As cam rotates by camAngle = 2π*phase,
-// relative angle of follower on cam: relA = -π/2 - camAngle
-// getCamOutput uses offset=0.25 → localPhase = phase+0.25
-// s = sin(2π*(phase+0.25)) = cos(2π*phase) = cos(camAngle)
-// So s (as seen by follower) = cos(camAngle)
-// And camAngle = -relA - π/2, so s = cos(-relA - π/2) = -sin(relA)... wait:
-// Let me use the direct relation: we want r(relA) such that
-// when follower is at relA on the cam, output = r(relA) - baseR
-// s = -cos(relA) (derived from camAngle = -π/2 - relA, sin(camAngle)=sin(-π/2-relA)=-cos(relA))
-// Hmm... let's verify numerically: when cam=0, relA=-π/2
-// s should be 1 (major peak). -cos(-π/2) = 0. That's wrong.
-// 
-// Let me re-derive properly:
-// For RIGHT (offset=0.25):
-//   s = sin(2π*(phase + 0.25)) = sin(2π*phase + π/2) = cos(2π*phase)
-//   camAngle = 2π*phase, so s = cos(camAngle)
-//   relA of follower = topAngle - camAngle = -π/2 - camAngle
-//   camAngle = -π/2 - relA
-//   s = cos(-π/2 - relA) = cos(π/2 + relA) = -sin(relA)   ← Hmm still 0 at -π/2
-//   Wait: relA at cam=0 is -π/2. -sin(-π/2) = -(-1) = 1 ✓
-//   At cam=π/2, relA=-π/2-π/2=-π. -sin(-π)=0. s=cos(π/2)=0 ✓
-//   At cam=π,   relA=-3π/2. -sin(-3π/2)=-1. s=cos(π)=-1 ✓
-// So: s = -sin(relA) for the RIGHT cam
-// r(relA) = baseR + (-sin(relA)>=0 ? major*(-sin(relA)) : minor*(sin(relA)))
-//         = baseR + (sin(relA)<=0 ? major*(-sin(relA)) : minor*sin(relA))
-//         = baseR + major*max(0,-sin(relA)) + minor*max(0,sin(relA))
 function camRadius(relA, baseR, major, minor) {
   const sinRelA = Math.sin(relA);
   return baseR + major * Math.max(0, -sinRelA) + minor * Math.max(0, sinRelA);
@@ -294,6 +257,13 @@ function getTilt(ph, amp) {
 function getSwing(ph, amp) {
   const c = Math.cos(2 * Math.PI * ph);
   return { right: -amp * c, left: amp * c };
+}
+
+// Pelvic obliquity angle from two hike values (mm) and anatomical hip width (mm)
+// Positive = right side high (right hip hike > left hip hike)
+function getPelvicObliqueAngleDeg(hikeRight, hikeLeft) {
+  const diff = hikeRight - hikeLeft; // mm
+  return Math.atan2(diff, HIP_WIDTH_MM) * 180 / Math.PI;
 }
 
 // ─── HISTORY ──────────────────────────────────────────────────────────────────
@@ -346,7 +316,16 @@ function drawGraph(ctx, x, y, w, h, title, hist, yMin, yMax) {
   ctx.restore();
 }
 
-// ─── 3D LEG ───────────────────────────────────────────────────────────────────
+// ─── 3D LEG (FIXED) ──────────────────────────────────────────────────────────
+// Anatomically correct leg kinematics:
+//   - thighAngle: swing angle from vertical (positive = forward)
+//   - kneeAngle:  always ≥ 0 (flexion only, never hyperextension); 0 = straight (180°)
+//   - shankAngle: thighAngle + kneeAngle  (knee bends shank forward relative to thigh)
+//   - footAngle:  kept near-horizontal (slight plantarflexion) regardless of shank angle
+//
+// Phase convention: 0–0.5 = swing phase, 0.5–1 = stance phase (for the right leg).
+// During swing (p < 0.5): knee flexes up to ~60° (run) / ~40° (walk) at mid-swing
+// During stance (p ≥ 0.5): knee stays near 0° (just slight 5° at loading/push-off)
 function getLeg3D(ph, isRight) {
   const p = normPhase(isRight ? ph : ph + 0.5);
   const swingDeg = isRight ? getSwing(ph, S.swing).right : getSwing(ph, S.swing).left;
@@ -398,28 +377,22 @@ function drawHumanLeg(ctx, hx, hy, leg3D, view, col, alpha = 1) {
 }
 
 // ─── CAM MECHANISM DRAW ───────────────────────────────────────────────────────
-// Shape: r(relA) = baseR + major*max(0,-sin(relA)) + minor*max(0,sin(relA))
-// Major lobe is in the -sin(relA) > 0 half = relA in (π, 2π) i.e. bottom half
-// When camAngle=0 (phase=0), follower at relA=-π/2: -sin(-π/2)=1 → peak → correct!
 function drawCamMechanism(ctx, cx, cy, radius, offset, outputVal, label) {
   ctx.save(); ctx.translate(cx, cy);
 
   const R = radius * 1.15;
-  const camAngle = normPhase(phase, 0) * Math.PI * 2;  // shaft rotation angle
+  const camAngle = normPhase(phase, 0) * Math.PI * 2;
 
-  // Visual scale: map mm amplitudes to pixel radii
-  const maxMajor = 30; // slider max
+  const maxMajor = 30;
   const baseR  = R * 0.30;
   const majorR = R * 0.42 * Math.min(1, S.major / maxMajor);
   const minorR = R * 0.42 * Math.min(1, S.minor / maxMajor) * (S.major > 0 ? Math.min(1, S.minor / S.major) : 1);
 
-  // ── Cam body path ──
+  // Cam body path
   const STEPS = 256;
   ctx.beginPath();
   for (let i = 0; i <= STEPS; i++) {
-    // relA is the angle on the cam body in the cam's own frame
     const relA = (i / STEPS) * Math.PI * 2;
-    // world angle of this point = relA + camAngle
     const worldA = relA + camAngle;
     const r = baseR + majorR * Math.max(0, -Math.sin(relA)) + minorR * Math.max(0, Math.sin(relA));
     if (i === 0) ctx.moveTo(r * Math.cos(worldA), r * Math.sin(worldA));
@@ -434,12 +407,12 @@ function drawCamMechanism(ctx, cx, cy, radius, offset, outputVal, label) {
   ctx.fillStyle = camGrad; ctx.fill();
   ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.stroke();
 
-  // ── Centre axle ──
+  // Centre axle
   ctx.beginPath(); ctx.arc(0, 0, R * 0.09, 0, Math.PI * 2);
   ctx.fillStyle = '#4a6888'; ctx.fill();
 
-  // ── Keyway: marks major-lobe axis on cam body (relA = 3π/2 = pointing down in cam frame) ──
-  const keyRelA  = Math.PI * 3 / 2; // where -sin is max (=1)
+  // Keyway
+  const keyRelA  = Math.PI * 3 / 2;
   const keyWorldA = keyRelA + camAngle;
   const keyR = baseR + majorR;
   ctx.beginPath();
@@ -447,12 +420,11 @@ function drawCamMechanism(ctx, cx, cy, radius, offset, outputVal, label) {
   ctx.lineTo(keyR * 0.9 * Math.cos(keyWorldA), keyR * 0.9 * Math.sin(keyWorldA));
   ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1.2; ctx.stroke();
 
-  // ── Follower at top (world angle = -π/2) ──
-  // relA of follower = topWorldA - camAngle = -π/2 - camAngle
+  // Follower at top
   const topWorldA = -Math.PI / 2;
   const follRelA  = topWorldA - camAngle;
   const follR = baseR + majorR * Math.max(0, -Math.sin(follRelA)) + minorR * Math.max(0, Math.sin(follRelA));
-  const frY = -follR;  // y in translated coords (top of cam = negative y)
+  const frY = -follR;
 
   // Guide rails
   ctx.beginPath();
@@ -467,7 +439,7 @@ function drawCamMechanism(ctx, cx, cy, radius, offset, outputVal, label) {
   ctx.fillStyle = col; ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 0.8; ctx.stroke();
 
-  // ── Major lobe annotation (relA = 3π/2 = max radius, world direction) ──
+  // Major lobe annotation
   const majWorldA = keyWorldA;
   const majTipR = baseR + majorR;
   const mx = Math.cos(majWorldA) * (majTipR + 6), my = Math.sin(majWorldA) * (majTipR + 6);
@@ -478,7 +450,7 @@ function drawCamMechanism(ctx, cx, cy, radius, offset, outputVal, label) {
   ctx.fillStyle = 'rgba(240,192,64,0.8)'; ctx.font = '500 7px IBM Plex Mono'; ctx.textAlign = 'center';
   ctx.fillText('MAJ', Math.cos(majWorldA) * (majTipR + 14), Math.sin(majWorldA) * (majTipR + 14) + 3);
 
-  // ── Minor lobe annotation (relA = π/2 = max of sin, world direction) ──
+  // Minor lobe annotation
   const minRelA   = Math.PI / 2;
   const minWorldA = minRelA + camAngle;
   const minTipR   = baseR + minorR;
@@ -489,13 +461,82 @@ function drawCamMechanism(ctx, cx, cy, radius, offset, outputVal, label) {
   ctx.fillStyle = 'rgba(180,200,255,0.7)';
   ctx.fillText('MIN', Math.cos(minWorldA) * (minTipR + 12), Math.sin(minWorldA) * (minTipR + 12) + 3);
 
-  // ── Live output readout ──
+  // Live output readout (mm)
   ctx.fillStyle = col; ctx.font = '600 8px IBM Plex Mono'; ctx.textAlign = 'center';
   ctx.fillText(outputVal.toFixed(1) + ' mm', 0, R * 0.78);
 
-  // ── Side label ──
+  // Side label
   ctx.fillStyle = col; ctx.font = '600 10px Barlow Condensed';
   ctx.fillText(label, 0, R + 17);
+
+  ctx.restore();
+}
+
+// ─── PELVIC OBLIQUITY ANGLE ARC ───────────────────────────────────────────────
+// Draws an angle arc + label between the two acetabular centres in the frontal view
+function drawPelvicObliquityAngle(ctx, acRight, acLeft, angleDeg) {
+  const midX = (acRight.x + acLeft.x) / 2;
+  const midY = (acRight.y + acLeft.y) / 2;
+  const dx = acRight.x - acLeft.x;
+  const dy = acRight.y - acLeft.y;
+  const lineAngle = Math.atan2(dy, dx); // angle of pelvis line from horizontal
+
+  // Draw the pelvis obliquity line between AC centres
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(acLeft.x, acLeft.y);
+  ctx.lineTo(acRight.x, acRight.y);
+  ctx.strokeStyle = 'rgba(240,192,64,0.55)';
+  ctx.lineWidth = 1.2;
+  ctx.setLineDash([3,5]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Reference horizontal line through midpoint
+  const refLen = Math.hypot(dx, dy) * 0.55;
+  ctx.beginPath();
+  ctx.moveTo(midX - refLen, midY);
+  ctx.lineTo(midX + refLen, midY);
+  ctx.strokeStyle = 'rgba(255,255,255,0.10)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([2,6]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Angle arc at midpoint
+  const arcR = 18;
+  const absAngle = Math.abs(angleDeg);
+  if (absAngle > 0.15) {
+    ctx.beginPath();
+    if (angleDeg >= 0) {
+      // right side up: arc from 0 (horizontal right) to lineAngle
+      ctx.arc(midX, midY, arcR, 0, lineAngle, false);
+    } else {
+      // left side up: arc from lineAngle to 0
+      ctx.arc(midX, midY, arcR, lineAngle, 0, false);
+    }
+    ctx.strokeStyle = 'rgba(240,192,64,0.9)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // Angle label
+  const labelAngle = lineAngle / 2;
+  const labelR = arcR + 10;
+  const lx = midX + labelR * Math.cos(labelAngle);
+  const ly = midY + labelR * Math.sin(labelAngle) - 2;
+  const sign = angleDeg >= 0 ? 'R↑' : 'L↑';
+  ctx.fillStyle = '#f0c040';
+  ctx.font = 'bold 9px IBM Plex Mono';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  glow(ctx, '#f0c040', 6);
+  ctx.fillText(absAngle.toFixed(1) + '°', lx, ly - 8);
+  noglow(ctx);
+  ctx.fillStyle = 'rgba(240,192,64,0.65)';
+  ctx.font = '500 7px IBM Plex Mono';
+  ctx.fillText(sign, lx, ly + 3);
+  ctx.textBaseline = 'alphabetic';
 
   ctx.restore();
 }
@@ -560,9 +601,8 @@ function drawSacrumFrontal(ctx, cx, cy, pelW) {
 }
 
 function drawIliumWorld(ctx, cx, cy, pelW, hikeVal, side) {
-  // hikeVal in mm (0..major), convert to visual angle for pelvis tilt display
   const maxMm  = Math.max(S.major, 1);
-  const angDeg = (hikeVal / maxMm) * 8;  // max visual tilt = 8°
+  const angDeg = (hikeVal / maxMm) * 8;
   const ang = (side === 1 ? -1 : 1) * angDeg * Math.PI / 180;
   const pivX = side === 1 ? pelW*0.22 : -pelW*0.22;
   const pivY = -pelW*0.62*0.62;
@@ -629,6 +669,10 @@ function render1(ph) {
   const acLeft  = drawIliumWorld(ctx, cx, cy, pelW, hike.left,  -1);
   drawSacrumFrontal(ctx, cx, cy, pelW);
 
+  // ── Pelvic obliquity angle overlay ──
+  const obliqDeg = getPelvicObliqueAngleDeg(hike.right, hike.left);
+  drawPelvicObliquityAngle(ctx, acRight, acLeft, obliqDeg);
+
   for (let g = 4; g >= 1; g--) {
     const gph = ph - g*0.04, op = (5-g)/4*0.12;
     drawHumanLeg(ctx, acRight.x, acRight.y, getLeg3D(gph,true),  'front','#ff6e50', op);
@@ -659,6 +703,7 @@ function render1(ph) {
   document.getElementById('r1').innerHTML =
     `<b>R HIKE</b> ${hike.right.toFixed(1)} mm<br>` +
     `<b>L HIKE</b> ${hike.left.toFixed(1)} mm<br>`  +
+    `<b>OBLIQ</b> ${obliqDeg.toFixed(2)}°<br>`       +
     `<b>PHASE</b> ${(ph*360).toFixed(0)}°`;
 }
 
@@ -735,6 +780,11 @@ function render3(ph) {
     ctx.beginPath(); ctx.arc(hx,cy,7,0,Math.PI*2);
     ctx.fillStyle='#060e1c'; ctx.fill(); ctx.strokeStyle=col; ctx.lineWidth=2; ctx.stroke();
   });
+
+  // Ground line for reference
+  const groundY = cy + 170;
+  ctx.beginPath(); ctx.moveTo(cx-100, groundY); ctx.lineTo(cx+100, groundY);
+  ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1; ctx.setLineDash([4,8]); ctx.stroke(); ctx.setLineDash([]);
 
   const wY = h*0.65, wOff = Math.min(80, w*0.24), wR = Math.min(25, Math.max(20, w*0.065));
   const swing = getSwing(ph, S.swing);
