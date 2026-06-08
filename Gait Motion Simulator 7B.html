@@ -944,7 +944,9 @@ function render1(ph) {
   ctx.fillStyle='#e8f04066'; ctx.font='bold 9px Barlow Condensed'; ctx.textAlign='center';
   ctx.fillText(isRStance?'R HIKE':'L HIKE', cx, h-16); ctx.textAlign='left';
 
-  drawGraph(ctx, 12, h * 0.75, w - 24, h * 0.22, 'Hike', history.hike, '#ff6e50', '#38d9a9', -S.hike, S.hike);
+  if (graphH >= 30) {
+  drawGraph(ctx, 20, graphTop, w - 28, graphH, 'Hike', history.hike, '#ff6e50', '#38d9a9', -S.hike, S.hike);
+}
 
   document.getElementById('r1').innerHTML =
     `<b>R HIKE</b> ${rightHikeOutput.toFixed(1)}°<br>` +
@@ -1018,7 +1020,19 @@ function render3(ph) {
   const ctx=ctx3, w=W(ctx), h=H(ctx);
   bg(ctx);
 
-  const cx=w*0.5, cy=h*0.28;
+  const cx = w / 2;
+  const padding = 12;
+  const pelW = Math.min(w, h) * 0.36;
+  const cy = padding + pelW * 0.6;
+  const pelvisBot = cy + pelW * 0.35;
+  const camRadius = Math.min(28, Math.max(18, w * 0.07));
+  const camGap = 16;
+  const camDisplayY = pelvisBot + camGap + camRadius;
+  const camOffset = Math.min(w * 0.28, cx - camRadius - 8);
+  const mechBot = camDisplayY + camRadius + 20;
+  const graphGap = 12;
+  const graphTop = mechBot + graphGap;
+  const graphH = h - graphTop - padding;
   dref(ctx, cx-60,cy, cx+60,cy);
   dref(ctx, cx,cy-15, cx,h*0.65);
 
