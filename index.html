@@ -381,7 +381,7 @@ function drawCamMechanism(ctx, cx, cy, radius, offset, outputVal, label) {
   ctx.save(); ctx.translate(cx, cy);
 
   const R = radius * 1.15;
-  const camAngle = normPhase(phase, offset) * Math.PI * 2;
+  const camAngle = normPhase(phase, offset) * Math.PI * 2 - Math.PI / 2;;
 
   const maxMajor = 30;
   const baseR  = R * 0.30;
